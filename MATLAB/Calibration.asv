@@ -1,0 +1,534 @@
+function Calibration(connectServer)
+% Eye Calibration procedure 
+% in GUI, use Calibra.conf to configure GUI to make it work with this
+% script.
+% to abolt this script "Cntl+c" and type "sca" + enter
+
+% connectServer : connect GUI or not
+% connectRipple : connect Ripple system or not
+
+% default fixation point is 0,0,0 and it can be updated by GUI with 
+% 'feedback' or 'dragging' options
+
+% before start this script, make it sure that GUI has correct screen size
+% , distance and inter occular distance that are required to calculate
+% conversion factors.
+
+
+% runtime error as below, pleace close MATLAB and close terminal (if MATLAB
+% started in terminal) and restart MATLAB
+% Error using icinterface/fopen (line 83)
+% Unsuccessful open: Address already in use (Bind failed)
+
+close all;
+
+skipSync = 1;
+
+VP.stereoMode = 1;    %Interleaved Stereo
+VP.multiSample = 8;   % number for multi-sampling to make edge of stimulus smooth
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% load default parameters for stimulus and experimental control
+% if needed, it can be changed in runtime
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+StiPF = 'Calibration_Conf.mat';
+if exists(StiPF)    
+    try
+        load(StiPF); % load default stimulus parameters
+        disp([StiPF ' is loaded']);
+    catch
+        disp('fail to load stimulus parameter file');
+    end
+else
+   disp('no defalut stimulus parameter information');
+   disp('set all parameters from default');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Setup our display and get some intial parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if 1 == skipSync %skip Sync to deal with sync issues
+    Screen('Preference','SkipSyncTests',1);
+end
+AssertOpenGL;
+InitializeMatlabOpenGL(0);
+Screen('Preference', 'Verbosity', 0); % Increase level of verbosity for debug purposes:
+Screen('Preference','VisualDebugLevel', 0); % control verbosity and debugging, level:4 for developing, level:0 disable errors
+VP.screenID = max(Screen('Screens'));    %Screen for display.
+[VP.window,VP.Rect] = PsychImaging('OpenWindow',VP.screenID,[VP.backgroundColor],[],[],[], VP.stereoMode, VP.multiSample);
+[VP.windowCenter(1),VP.windowCenter(2)] = RectCenter(VP.Rect); %Window center
+VP.windowWidthPix = VP.Rect(3)-VP.Rect(1);
+VP.windowHeightPix = VP.Rect(4)-VP.Rect(2);
+
+VP.backGroundColor = StiPF.BGColor;  % [R G B] [0~1 0~1 0~1]
+VP.fixationDotSize = StiPF.dotSize;  % 
+VP.fixColor = StiPF.dotColor; 
+
+% % Datapixx connection
+% try
+% PsychImaging('PrepareConfiguration'); %Prepare pipeline for configuration.
+% PsychImaging('AddTask','General','UseDataPixx'); % Tell PTB we want to display on a DataPixx device.
+% 
+% if ~Datapixx('IsReady')
+%     Datapixx('Open');
+% end
+% Datapixx('DisablePropixxLampLed');
+% Datapixx('SetPropixxDlpSequenceProgram',2);
+% Datapixx('EnablePropixxLampLed');
+% Datapixx('SetPropixx3DCrosstalk', 1);
+% Datapixx('RegWr');
+% catch
+%     disp('Datapixx not enabled');
+% end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Initialization
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+VP.backgroundColor = [0.4 0.4 0.4].*255; %Gray-scale
+LColor = 'green'; RColor = 'blue';
+TColor = 'red';
+packetSize = 1024;
+bufferLength = packetSize*1;
+CMD=[]; CMD_Word=[]; updated_CMDs = [];
+IsLEyeIn=0; IsREyeIn=0; IsVergenceIn = 0;
+IsESC = 0;
+Version = 2; Vergence = 1; VergenceOption = 3;
+OnGoing = 1; IsESC = 0;
+FirstRun = 1;
+xPosFixation=0; yPosFixation=0; zPosFixation=0;
+oldX = xPosFixation; oldY = yPosFixation; oldZ = zPosFixation;
+FinishedT= 0;
+
+HideCursor;
+
+if connectServer
+    Myudp = udp('100.1.1.3', 5001, 'LocalPort', 5002);
+    if ~isempty(Myudp)
+        set(Myudp,'ReadAsyncMode','continuous');
+        set(Myudp,'InputBufferSize',bufferLength*2);
+        set(Myudp,'OutputBufferSize',bufferLength*2);
+        set(Myudp,'DatagramTerminateMode','on');
+        fopen(Myudp);   
+        readasync(Myudp);  % start async. reading to control flow and check eye pos
+        
+        SendUDPGui(Myudp, '-1 8256');   %% send probe packet to establish initial UDP connection
+        StateTime = GetSecs;
+        
+        
+        tempEnd = 1; IsESC = 0;
+        while tempEnd && ~IsESC
+            CurrentTime = GetSecs - StateTime;
+            if CurrentTime >=2
+                if ~isempty(Myudp)
+                    fclose(Myudp);
+                end
+                sca;
+                error('********** Please Start GUI first ************');
+                tempEnd = 0;
+            end
+            [keydown, ~, keyCode] = KbCheck;
+            if keydown
+                keyCode = find(keyCode,1);
+                if keyCode==10
+                    IsESC = 1;
+                end
+            end
+            
+            if Myudp.BytesAvailable >= packetSize
+                tempUDP = fread(Myudp,packetSize);
+                for i=1:length(tempUDP)
+                    UDP_Pack(i) = char(tempUDP(i));
+                end
+                tempIndex = strfind(UDP_Pack,'/');
+                if ~isempty(tempIndex)
+                    for i=1:length(tempIndex)
+                        if i>1
+                            tempStr = UDP_Pack(tempIndex(i-1)+1:tempIndex(i)-1);
+                        else
+                            tempStr = UDP_Pack(1:tempIndex(i)-1);
+                        end
+                        p=find(tempStr=='q');
+                        if ~isempty(p)
+                            tempStr(p)='';
+                        end
+                        [CMD, tempWord] = strtok(tempStr, ' ');
+                        CMD_Word = str2double(strrep(tempWord,' ',''));                        
+                        switch CMD
+                            case '-1'
+                                if CMD_Word == 8257
+                                    SendUDPGui(Myudp,'-1 8257');
+                                    SendUDPGui(Myudp,['7 ' num2str(VP.windowWidthPix)]);
+                                    SendUDPGui(Myudp,['8 ' num2str(VP.windowHeightPix)]);
+                                end
+                            case '-4'
+                                VP.screenDistance = CMD_Word;                                
+                            case '-6'
+                                VP.IOD = CMD_Word; %mm                              
+                            case '-5' 
+                                VP.screenWidthMm = CMD_Word;  %mm                                
+                            case '-3'
+                                VP.screenHeightMm = CMD_Word; %mm                                
+                        end
+                    end
+                    tempEnd = 0;
+                end
+                disp('Received initializing parameters');                
+            end
+        end
+    end
+end
+
+if connectServer
+    Myudp_eye = udp('100.1.1.3', 5003, 'LocalPort', 5004);
+    if ~isempty(Myudp_eye)
+        set(Myudp_eye,'ReadAsyncMode','continuous');
+        set(Myudp_eye,'InputBufferSize',bufferLength*2);
+        set(Myudp_eye,'OutputBufferSize',bufferLength);
+        set(Myudp_eye,'DatagramTerminateMode','on');        
+        fopen(Myudp_eye);   
+        
+        readasync(Myudp_eye);  % start async. reading to control flow and check eye pos        
+    end
+end
+
+if VP.stereoMode == 4
+    VP.screenWidthPix = 2*VP.windowWidthPix;
+else
+    VP.screenWidthPix = VP.windowWidthPix;
+end
+VP.screenHeightPix = VP.windowHeightPix;
+glBlendFunc(GL.SRC_ALPHA,GL.ONE_MINUS_SRC_ALPHA); %Alpha blending for antialising
+VP.ifi = Screen('GetFlipInterval', VP.window);
+VP.frameRate = Screen('FrameRate',VP.window);
+if VP.stereoMode
+    VP.stereoViews = 1;
+else
+    VP.stereoViews = 0;
+end
+Calculate the width of one eye's view (in deg)
+VP.screenWidthDeg = 2*atand(0.5*VP.screenWidthMm/VP.screenDistance);
+VP.pixelsPerDegree = VP.screenWidthPix/VP.screenWidthDeg; % calculate pixels per degree
+VP.pixelsPerMm = VP.screenWidthPix/VP.screenWidthMm; %% pixels/Mm
+VP.MmPerDegree = VP.screenWidthMm/VP.screenWidthDeg;
+VP.degreesPerMm = 1/VP.MmPerDegree;
+VP.aspect = VP.screenWidthPix/VP.screenHeightPix;
+% Initial flip to sync us to VBL and get start timestamp:
+VP.vbl = Screen('Flip', VP.window);
+
+if connectServer
+    StateID = 110; % wait until Python GUI changes it to 100
+    FirstStep = 1;
+else
+    StateID = 100;
+    FirstStep = 1;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% set priority of main thread
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+priorityLevel=MaxPriority(VP.window); 
+Priority(priorityLevel);
+
+
+while ~IsESC && OnGoing
+    
+    [keydown, ~, keyCode] = KbCheck;
+    if keydown
+        keyCode = find(keyCode,1);
+        if keyCode==10
+            IsESC = 1;
+        end
+    end
+    
+    if connectServer
+        if Myudp_eye.BytesAvailable >= packetSize
+            UDP_Pack = char(fread(Myudp_eye,packetSize))';
+            flushinput(Myudp_eye);
+            p=find(UDP_Pack=='q');
+            if ~isempty(p)
+                UDP_Pack(p)='';
+            end
+            tempIndex = strfind(UDP_Pack,'/');
+            if ~isempty(tempIndex)
+                for i=1:length(tempIndex)
+                    if i>1
+                        tempStr = UDP_Pack(tempIndex(i-1)+1:tempIndex(i)-1);
+                    else
+                        tempStr = UDP_Pack(1:tempIndex(i)-1);
+                    end
+                    [CMD, tempWord] = strtok(tempStr, ' ');
+                    CMD_Word = strrep(tempWord,' ','');
+                    switch CMD
+                        case '-14'
+                            IsLEyeIn = str2double(CMD_Word);
+                        case '-15'
+                            IsREyeIn = str2double(CMD_Word);
+                        case '-16'
+                            IsVergenceIn = str2double(CMD_Word);
+                    end
+                end
+            end
+        end
+        
+        if Myudp.BytesAvailable >= packetSize
+            UDP_Pack = char(fread(Myudp,packetSize))';
+            flushinput(Myudp);
+            p=find(UDP_Pack=='q');
+            if ~isempty(p)
+                UDP_Pack(p)='';
+            end
+            tempIndex = strfind(UDP_Pack,'/');
+            if ~isempty(tempIndex)
+                for i=1:length(tempIndex)
+                    if i>1
+                        tempStr = UDP_Pack(tempIndex(i-1)+1:tempIndex(i)-1);
+                    else
+                        tempStr = UDP_Pack(1:tempIndex(i)-1);
+                    end
+                    [CMD, tempWord] = strtok(tempStr, ' ');
+                    CMD_Word = strrep(tempWord,' ','');
+                    switch CMD
+                        case '-2'
+                            switch CMD_Word
+                                case '100'
+                                    StateID = 100;
+                                    FirstStep = 1;
+                                case '101'
+                                    OnGoing = 0;
+                                case '103'
+                                    OnGoing = 0;
+                                case '102'
+                                    StateID = 110;
+                                    FirstStep = 1;
+                                case '108'
+                                    StateID = 6;
+                                    FirstStep = 1;
+                            end
+                        case '-4'
+                            VP.screenDistance = str2double(CMD_Word);
+                            receivedScreenInfo = 1;
+                        case '-6'
+                            VP.IOD = str2double(CMD_Word);
+                        case '-5' %mm
+                            VP.screenWidthMm = str2double(CMD_Word); %= 332; %530;      %mm
+                        case '-3'
+                            VP.screenHeightMm = str2double(CMD_Word); %= 206; %290;     %mm
+                        case '-17'
+                            StateID = 6;
+                            FirstStep = 1;
+                        case '-102'
+                            StiP.rewardDura = str2double(CMD_Word);
+                        case '-103'
+                            StiP.fixationAcqDura = str2double(CMD_Word);
+                        case '-104'
+                            StiP.fixationDura = str2double(CMD_Word);
+                        case '-106'
+                            StiP.ITI = str2double(CMD_Word);
+                        case '-107'
+                            Version = str2double(CMD_Word);
+                        case '-108'
+                            Vergence = str2double(CMD_Word);
+                        case '-109'
+                            VergenceOption = str2double(CMD_Word);  %%% 1-HV, 2-H
+                        case '-11'
+                            xPosFixation = str2double(CMD_Word)*VP.pixelsPerMm;
+                        case '-12'
+                            yPosFixation = str2double(CMD_Word)*VP.pixelsPerMm;
+                        case '-13'
+                            zPosFixation = str2double(CMD_Word);
+                    end
+                end
+            end
+        end
+    else
+        IsLEyeIn = 1; IsREyeIn = 1; IsVergenceIn = 1;
+    end
+    
+    if connectServer && ~FirstRun && ~isequal([xPosFixation, yPosFixation, zPosFixation],[oldX, oldY, oldZ])
+        StateID = 100;
+        FirstStep = 1;
+    end
+    
+    switch StateID
+        case 110  %% initial state when server is in use and connected
+            if FirstStep==1
+                for view = 0:VP.stereoViews
+                    % Select 'view' to render (left- or right-eye):
+                    Screen('SelectStereoDrawbuffer', VP.window, view);
+                    Screen('FillRect',VP.window, [VP.backgroundColor(1:3)]);
+                end
+                VP.vbl = Screen('Flip', VP.window,[],1);
+                FirstStep = 0;
+            else
+                StateID = 110;
+                
+            end
+            
+        case 100 %% inter trial interval
+            if FirstStep==1
+                oldX = xPosFixation;
+                oldY = yPosFixation;
+                oldZ = zPosFixation;
+                for view = 0:VP.stereoViews
+                    % Select 'view' to render (left- or right-eye):
+                    Screen('SelectStereoDrawbuffer', VP.window, view);
+                    Screen('FillRect',VP.window, [VP.backgroundColor(1:3)]);
+                end
+                VP.vbl = Screen('Flip', VP.window,[],1);
+                StateTime = GetSecs;
+                FirstStep = 0;
+                FirstRun = 0;
+            else
+                EndT = GetSecs - StateTime;
+                if EndT >= StiP.ITI
+                    StateID = 99;
+                    FirstStep = 1;
+                end
+            end
+            
+        case 99   %% check acquiring fixation point
+            if FirstStep==1
+                if connectServer
+                    tempStr = ['50 1 ' num2str(xPosFixation) ' ' num2str(yPosFixation) ' ' num2str(zPosFixation) ' ' num2str(Version) ' ' LColor ' ' RColor];
+                    SendUDPGui(Myudp,tempStr);  % send 'Trial_Start' signal
+                    SendUDPGui(Myudp,'51'); %% start eye window
+                    %SendUDPGui(Myudp,'53'); %% start vergence window
+                end
+                IsLEyeIn = 0; IsREyeIn = 0; IsVergenceIn=0;
+                for view = 0:VP.stereoViews
+                    % Select 'view' to render (left- or right-eye):
+                    Screen('SelectStereoDrawbuffer', VP.window, view);
+                    Screen('FillRect',VP.window, [VP.backgroundColor(1:3)]);
+                    Screen('DrawDots', VP.window, [xPosFixation+(VP.Rect(3)/2), -yPosFixation + (VP.Rect(4)/2)],VP.fixationDotSize, VP.fixationColor, [],2);
+                end
+                VP.vbl = Screen('Flip', VP.window,[],1);
+                StateTime = GetSecs;
+                if connectServer
+                    SendUDPGui(Myudp,['6 113 ' num2str(StateID) ' ' num2str(StateTime)]);  % send 'Fix_On' signal
+                end
+                FirstStep = 0;
+            else
+                if connectServer
+                    SendUDPGui(Myudp,'4');  %% request checking eye window
+                    SendUDPGui(Myudp,['5 ' num2str(xPosFixation) ' ' num2str(yPosFixation) ' ' num2str(zPosFixation) ' ' num2str(Vergence) ' ' num2str(VergenceOption)]);  %% request checking vergence
+                end
+                EndT = GetSecs - StateTime;
+                
+                if IsLEyeIn==1 && IsREyeIn==1 && IsVergenceIn==1 && EndT<= StiP.fixationAcqDura
+                    StateID = 0;
+                    FirstStep = 1;
+                    if connectServer
+                        SendUDPGui(Myudp,['6 114 ' num2str(StateID) ' ' num2str(StateTime)]);  % send 'Fixation acquired' signal
+                    end
+                else
+                    if EndT > StiP.fixationAcqDura % fail to acquire fixation window
+                        StateID = 10;
+                        FirstStep = 1;
+                        if connectServer
+                            SendUDPGui(Myudp,['6 115 ' num2str(StateID) ' ' num2str(StateTime)]);  % send 'Fixation fail to acquired' signal
+                        end
+                    end
+                end
+                
+            end
+            
+        case 0  %% check fixation holding time
+            if FirstStep==1
+                StateTime = GetSecs;
+                FirstStep = 0;
+            else
+                if connectServer
+                    SendUDPGui(Myudp,'4');  %% request checking eye window
+                    SendUDPGui(Myudp,['5 ' num2str(xPosFixation) ' ' num2str(yPosFixation) ' ' num2str(zPosFixation) ' ' num2str(Vergence) ' ' num2str(VergenceOption)]);  %% request checking vergence
+                end
+                
+                EndT = GetSecs - StateTime;
+                
+                if IsLEyeIn~=1 || IsREyeIn~=1 || IsVergenceIn~=1  % break fixation window
+                    StateID = 10;
+                    FirstStep =1;
+                    if connectServer
+                        SendUDPGui(Myudp,['6 116 ' num2str(StateID) ' ' num2str(StateTime)]);  % send 'Fixation broken' signal
+                    end
+                else
+                    if IsLEyeIn==1 && IsREyeIn==1 && IsVergenceIn==1 && EndT >= StiP.fixationDura % hold fixation window
+                        StateID = 6;
+                        FirstStep = 1;
+                        if connectServer
+                            SendUDPGui(Myudp,['6 117 ' num2str(StateID) ' ' num2str(StateTime)]);  % send 'Fixation hold' signal
+                        end
+                    end
+                end
+            end
+            
+        case 6  %% reward for holding fixation
+            if FirstStep==1
+                StateTime = GetSecs;
+                if Datapixx('IsReady')
+                    Datapixx('RegWrRd');
+                    Datapixx('SetDoutValues', 1);
+                    Datapixx('RegWrRd');
+                end
+                FinishedT = FinishedT+1;
+                if connectServer
+                    SendUDPGui(Myudp,['1 202 ' num2str(FinishedT)]);
+                    SendUDPGui(Myudp,['6 140 ' num2str(StateID) ' ' num2str(StateTime)]);  % send 'rewarding juice' signal
+                end
+                FirstStep = 0;
+            else
+                
+                EndT = GetSecs - StateTime;
+                
+                if EndT >= StiP.rewardDura 
+                    if connectServer                        
+                        if Datapixx('IsReady')
+                            Datapixx('RegWrRd');
+                            Datapixx('SetDoutValues', 0);
+                            Datapixx('RegWrRd');
+                        end
+                        SendUDPGui(Myudp,['6 112 ' num2str(StateID) ' ' num2str(StateTime)]);  % send 'Trial_End' signal
+                    end
+                    StateID = 100;
+                    FirstStep = 1;
+                end
+            end
+    end
+end
+
+if connectServer
+    if ~isempty(Myudp)
+        fclose(Myudp);
+    end
+    if ~isempty(Myudp_eye)
+        fclose(Myudp_eye);
+    end
+end
+
+ShowCursor; %show the cursor
+Screen('CloseAll'); %close the display window
+close all
+Priority(0);
+
+end
+
+
+function SendUDPGui(Dest, tempStr)
+packetSize = 1024;
+SendStr(1:packetSize) = 'q';
+SendStr(1:length(tempStr)+1) = [tempStr '/'];
+fwrite(Dest, SendStr);    %% send UDP packet
+end
+
+function CleanUP(UDP1, UDP2)
+if ~isempty(UDP1)
+    fclose(UDP1);
+end
+if ~isempty(UDP2)
+    fclose(UDP2);
+end
+if xippmex
+    xippmex('close')
+end
+end
