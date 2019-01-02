@@ -26,14 +26,16 @@ class Main:
         self.stop_threads = threading.Event()
         self.stop_threads.clear()
 
-        # # Eye interpreter
-        self.eye_interpreter_thread = threading.Thread(target=EyeInterpret)
-        self.eye_interpreter_thread.setDaemon(True)
-        self.eye_interpreter_thread.start()
+        if globls.eye_recording_method != EyeRecordingMethods.EYE_NONE:
+            # # Eye interpreter
+            self.eye_interpreter_thread = threading.Thread(target=EyeInterpret)
+            self.eye_interpreter_thread.setDaemon(True)
+            self.eye_interpreter_thread.start()
 
         self.arbitrator_server_thread = threading.Thread(target=ArbitratorServer)
         self.arbitrator_server_thread.setDaemon(True)
         self.arbitrator_server_thread.start()
+
 
         self.exit_check_periodic_call()
 
