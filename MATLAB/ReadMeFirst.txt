@@ -1,7 +1,7 @@
-All example codes are using Psychtoolbox.
+Some of example codes are using Psychtoolbox.
 
 Please install Psychtoolbox.
-Psychtoolbox support EyeLink and VPixx system.
+Psychtoolbox also support EyeLink and VPixx system.
 
 Psychtoolbox Site : http://psychtoolbox.org/
 	1. follow an instruction to install all necessary pakages
