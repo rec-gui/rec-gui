@@ -1,5 +1,77 @@
 function [VP, pa, d, g, b] = Receptive_Field_Mapping(connectServer, connectRipple, StereoMode)
 
+close all;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% initial network parameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+GUI_IP = '100.1.1.3'; %% IP address of the GUI machine
+ServerPort = 5001;
+LocalPort = 5002;
+ServerPort_eye = 5003;
+LocalPort_eye = 5004;
+packetSize = 1024;  % UDP packet size
+bufferLength = packetSize*2;  % prepare network buffer size
+if connectServer
+    Myudp = udp(GUI_IP, ServerPort, 'LocalPort', LocalPort);
+    if ~isempty(Myudp)
+        set(Myudp,'ReadAsyncMode','continuous');
+        set(Myudp,'InputBufferSize',bufferLength);
+        set(Myudp,'OutputBufferSize',bufferLength);
+        set(Myudp,'DatagramTerminateMode','on');
+        try
+            fopen(Myudp);
+            readasync(Myudp);  % start async. reading to control flow and check eye pos
+        catch
+            disp('Fatal erro in establishing UDP connection');
+            disp('MATLAB needs to restart');
+            disp('Press any key....');
+            pause;
+            exit;
+        end
+        
+        Myudp_eye = udp(GUI_IP, ServerPort_eye, 'LocalPort', LocalPort_eye);
+        if ~isempty(Myudp_eye)
+            set(Myudp_eye,'ReadAsyncMode','continuous');
+            set(Myudp_eye,'InputBufferSize',bufferLength*2);
+            set(Myudp_eye,'OutputBufferSize',bufferLength);
+            set(Myudp_eye,'DatagramTerminateMode','on');
+            try
+                fopen(Myudp_eye);
+                readasync(Myudp_eye);  % start async. reading to control flow and check eye pos    
+            catch
+                disp('Fatal error in establishing UDP connection');
+                disp('MATLAB needs to restart');
+                disp('Press any key....');
+                pause;
+                exit;
+            end                        
+        end
+        FinishUP = onCleanup(@() CleanUDP(Myudp, Myudp_eye));
+    end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% load default parameters for stimulus and experimental control
+% if needed, it can be changed in runtime
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+StiPF = 'Receptive_Field_Mapping_Conf.mat';  % read default configuration before receiving configuraion from GUI
+if exist(StiPF)    
+    try
+        load(StiPF); % load default stimulus parameters        
+        disp([StiPF ' is loaded']);
+        % VP is a structure that contains all parameters of drawing screen
+        % of Psychtoolbox.
+        VP.backGroundColor = StiP.backGroundColor;  % [R G B] [0-255 0-255 0-255]
+        VP.fixColor = StiP.dotColor; % [R G B] [0-255 0-255 0-255]        
+    catch
+        disp('fail to load stimulus parameter file');
+    end
+else
+   disp('no defalut stimulus parameter information');
+   disp('set all parameters from default');
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Parameters needed
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -44,8 +116,6 @@ VP.stereoMode = StereoMode;
 %
 
 VP.multiSample = 8;
-VP.fixColor = [255 255 255];
-VP.backGroundColor = [0.4 0.4 0.4]; %Gray-scale
 
 skipSync = 1;
 Priority(2);
@@ -62,7 +132,7 @@ global GL; %Global GL Data Structure, Cannot 'BeginOpenGL' Without It.
 Screen('Preference', 'Verbosity', 0); % Increase level of verbosity for debug purposes:
 Screen('Preference','VisualDebugLevel', 0); % control verbosity and debugging, level:4 for developing, level:0 disable errors
 VP.screenID = max(Screen('Screens'));    %Screen for display.
-[VP.window,VP.Rect] = PsychImaging('OpenWindow',VP.screenID,[VP.backGroundColor],[],[],[], VP.stereoMode, VP.multiSample);
+[VP.window,VP.Rect] = PsychImaging('OpenWindow',VP.screenID, VP.backGroundColor,[],[],[], VP.stereoMode, VP.multiSample);
 [VP.windowCenter(1),VP.windowCenter(2)] = RectCenter(VP.Rect); %Window center
 VP.windowWidthPix = VP.Rect(3)-VP.Rect(1);
 VP.windowHeightPix = VP.Rect(4)-VP.Rect(2);
@@ -108,36 +178,20 @@ IsESC = 0;
 Version_Fix = 2; Vergence = 1; VergenceOption = 3;
 OnGoing = 1; IsESC = 0;
 b.barColor = [0 0 0];
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% REC-GUI Connection
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load('Receptive_Field_Mapping_Conf.mat');  % read default configuration before receiving configuraion from GUI
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% establish UDP channel to the GUI
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if connectServer
-    Myudp = udp('100.1.1.3', 5001, 'LocalPort', 5002);
-    if ~isempty(Myudp)
-        set(Myudp,'ReadAsyncMode','continuous');
-        set(Myudp,'InputBufferSize',bufferLength*2);
-        set(Myudp,'OutputBufferSize',bufferLength*2);
-        set(Myudp,'DatagramTerminateMode','on');
-        fopen(Myudp);   
-        
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % here two UDP channels established 
+    % Myudp - for sending/recieving events and control info
+    % Myudp_eye - for sending/recieving eye movement related events
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(Myudp)               
         SendUDPGui(Myudp, '-1 8256');   %% send probe packet to establish initial UDP connection
-        StateTime = GetSecs;
-        readasync(Myudp);  % start async. reading to control flow and check eye pos
-        
         tempEnd = 1; IsESC = 0;
         while tempEnd && ~IsESC
-            CurrentTime = GetSecs - StateTime;
-            if CurrentTime >=2
-                if ~isempty(Myudp)
-                    fclose(Myudp);
-                end
-                sca;
-                error('********** Please Start GUI first ************');
-                tempEnd = 0;
-            end
             [keydown, ~, keyCode] = KbCheck;
             if keydown
                 keyCode = find(keyCode,1);
@@ -164,7 +218,7 @@ if connectServer
                             tempStr(p)='';
                         end
                         [CMD, tempWord] = strtok(tempStr, ' ');
-                        CMD_Word = str2double(strrep(tempWord,' ',''));                        
+                        CMD_Word = str2double(strrep(tempWord,' ','')); 
                         switch CMD
                             case '-1'
                                 if CMD_Word == 81257
@@ -178,11 +232,13 @@ if connectServer
                                     SendUDPGui(Myudp,['8 ' num2str(VP.screenHeight)]);
                                     disp('Success in connection Matlab run first');
                                 end
+                                
+                            % GUI send actual size of screen and distance                             
                             case '-4'
-                                VP.screenDistance = CMD_Word;                                
+                                VP.screenDistance = CMD_Word; % mm
                             case '-6'
-                                VP.IOD = CMD_Word; % mm                               
-                            case '-5' 
+                                VP.IOD = CMD_Word; % mm
+                            case '-5'
                                 VP.screenWidthMm = CMD_Word; %mm
                             case '-3'
                                 VP.screenHeightMm = CMD_Word; %mm
@@ -190,21 +246,9 @@ if connectServer
                     end
                     tempEnd = 0;
                 end
-                disp('Received initializing parameters');                
+                disp('Received initializing parameters');
             end
         end
-    end
-end
-
-if connectServer
-    Myudp_eye = udp('100.1.1.3', 5003, 'LocalPort', 5004);
-    if ~isempty(Myudp_eye)
-        set(Myudp_eye,'ReadAsyncMode','continuous');
-        set(Myudp_eye,'InputBufferSize',bufferLength*2);
-        set(Myudp_eye,'OutputBufferSize',bufferLength);
-        set(Myudp_eye,'DatagramTerminateMode','on');
-        fopen(Myudp_eye);        
-        readasync(Myudp_eye);  % start async. reading to control flow and check eye pos
     end
 end
 
@@ -450,7 +494,7 @@ while ~IsESC && OnGoing
                 for view = 0:VP.stereoViews
                     % Select 'view' to render (left- or right-eye):
                     Screen('SelectStereoDrawbuffer', VP.window, view);
-                    Screen('FillRect',VP.window, [VP.backGroundColor(1:3)*255]);
+                    Screen('FillRect',VP.window, VP.backGroundColor);
                 end
                 VP.vbl = Screen('Flip', VP.window,[],1);
                 FirstStep = 0;
@@ -462,7 +506,7 @@ while ~IsESC && OnGoing
                 for view = 0:VP.stereoViews
                     % Select 'view' to render (left- or right-eye):
                     Screen('SelectStereoDrawbuffer', VP.window, view);
-                    Screen('FillRect',VP.window, [VP.backGroundColor(1:3)*255]);
+                    Screen('FillRect',VP.window, VP.backGroundColor);
                 end
                 VP.vbl = Screen('Flip', VP.window, [],1);
                 
@@ -563,7 +607,7 @@ while ~IsESC && OnGoing
                     case {'bar'}
                         pa.drawmask = 0;
                         b.barRect = CenterRectOnPoint([0 0 b.bar_width b.bar_height], VP.Rect(3)/2, VP.Rect(4)/2);
-                        Screen('FillRect',VP.barWindow, [VP.backGroundColor]);
+                        Screen('FillRect',VP.barWindow, VP.backGroundColor);
                         Screen('FillRect', VP.barWindow, [b.barColor, g.contrast/100*255], b.barRect);
                         b.barTex = Screen('MakeTexture',VP.window, VP.barWindow);
                         % Rotation angle for the stimulus
@@ -585,7 +629,7 @@ while ~IsESC && OnGoing
                     % just fill with the same color as the background color of the screen
                     % 'gray'. The transparency (aka alpha) channel is filled based on
                     % the size of the aperture
-                    mask=ones(2*VP.windowWidthPix+1, 2*VP.windowHeightPix+1, 2)*VP.backGroundColor(1)*255;
+                    mask=ones(2*VP.windowWidthPix+1, 2*VP.windowHeightPix+1, 2)*VP.backGroundColor(1);
                     [x,y]=meshgrid(-1*VP.windowWidthPix:1*VP.windowWidthPix,-1*VP.windowHeightPix:1*VP.windowHeightPix);
                     centerX = 0;
                     centerY = 0;
@@ -631,7 +675,7 @@ while ~IsESC && OnGoing
                 for view = 0:VP.stereoViews
                     % Select 'view' to render (left- or right-eye):
                     Screen('SelectStereoDrawbuffer', VP.window, view);
-                    Screen('FillRect',VP.window, [VP.backGroundColor(1:3)*255]);
+                    Screen('FillRect',VP.window, VP.backGroundColor);
                     Screen('DrawDots', VP.window, [VP.fix_stereoX(view+1), VP.fix_stereoY],VP.fixationDotSize, VP.fixColor, [],2);
                 end
                 VP.vbl = Screen('Flip', VP.window, [],1);
@@ -746,7 +790,7 @@ while ~IsESC && OnGoing
             %% Stimulus
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Clear the screen to our offscreen buffer
-            Screen('FillRect',VP.CopyBuffer, [VP.backGroundColor(1:3)*255]);
+            Screen('FillRect',VP.CopyBuffer, VP.backGroundColor);
             if pa.pulse_on == 1
                 % Depth Calculations
                 % So that the stimulus still aligns with the mouse, we find the world
@@ -935,8 +979,8 @@ while ~IsESC && OnGoing
             
             % Photodiode masks for each eye so stimulus doesn't interrupt
             % signal
-            Screen('DrawDots',VP.window, [VP.Rect(1)+25 VP.Rect(4)-25], 50, [VP.backGroundColor(1:3)*255],[0 0],2);
-            Screen('DrawDots',VP.window, [VP.Rect(3)-25 VP.Rect(4)-25], 50, [VP.backGroundColor(1:3)*255],[0 0],2);
+            Screen('DrawDots',VP.window, [VP.Rect(1)+25 VP.Rect(4)-25], 50, VP.backGroundColor,[0 0],2);
+            Screen('DrawDots',VP.window, [VP.Rect(3)-25 VP.Rect(4)-25], 50, VP.backGroundColor,[0 0],2);
             if pa.pulse_on
                 % Draw Left photodiode circle
                 Screen('DrawDots',VP.window, [VP.Rect(1)+25 VP.Rect(4)-25], 50, [255 255 255],[0 0],2);
@@ -947,8 +991,8 @@ while ~IsESC && OnGoing
             
             % Photodiode masks for each eye so stimulus doesn't interrupt
             % signal
-            Screen('DrawDots',VP.window, [VP.Rect(1)+25 VP.Rect(4)-25], 50, [VP.backGroundColor(1:3)*255],[0 0],2);
-            Screen('DrawDots',VP.window, [VP.Rect(3)-25 VP.Rect(4)-25], 50, [VP.backGroundColor(1:3)*255],[0 0],2);
+            Screen('DrawDots',VP.window, [VP.Rect(1)+25 VP.Rect(4)-25], 50, VP.backGroundColor,[0 0],2);
+            Screen('DrawDots',VP.window, [VP.Rect(3)-25 VP.Rect(4)-25], 50, VP.backGroundColor,[0 0],2);
             if pa.pulse_on
                 % Draw Right photodiode circle
                  Screen('DrawDots',VP.window, [VP.Rect(3)-25 VP.Rect(4)-25], 50, [255 255 255],[0 0],2);
@@ -973,16 +1017,14 @@ while ~IsESC && OnGoing
             if connectServer
                 SendUDPGui(Myudp,['6 140 ' num2str(StateID) ' ' num2str(StateTime)]);  % send 'rewarding juice' signal
             end
-%             if Datapixx('IsReady')
-%                 Datapixx('RegWrRd');
-%                 StateTime = Datapixx('GetTime');
-%                 Datapixx('SetDoutValues', 1); %% start rewarding (bit0)
-%                 Datapixx('RegWrRd');
-%             else
-                if connectServer
-                    SendUDPGui(Myudp, '60'); %reward on
-                end
-%             end
+            if Datapixx('IsReady')
+                Datapixx('RegWrRd');
+                StateTime = Datapixx('GetTime');
+                Datapixx('SetDoutValues', 1); %% start rewarding (bit0)
+                Datapixx('RegWrRd');
+            else
+                %< add code for rewarding>
+            end
             if connectRipple
                 xippmex('digout',5,140); % reward on
             end
@@ -990,14 +1032,12 @@ while ~IsESC && OnGoing
             reward_time = GetSecs - reward_start;
             if reward_time >= pa.reward_duration
                 reward = 0;
-%                 if Datapixx('IsReady')
-%                     Datapixx('SetDoutValues',0); %% stop rewarding (bit0)
-%                     Datapixx('RegWrRd');
-%                 else
-                    if connectServer
-                        SendUDPGui(Myudp, '61'); %reward off
-                    end
-%                 end
+                if Datapixx('IsReady')
+                    Datapixx('SetDoutValues',0); %% stop rewarding (bit0)
+                    Datapixx('RegWrRd');
+                else
+                    % <add code for reward off>
+                end
                 if connectRipple
                     xippmex('digout',5,141); % reward off
                 end
@@ -1035,22 +1075,18 @@ Priority(0);
 end
 
 function SendUDPGui(Dest, tempStr)
-packetSize = 1024;
-SendStr(1:packetSize) = 'q';
-SendStr(1:length(tempStr)+1) = [tempStr '/'];
-fwrite(Dest, SendStr);    %% send UDP packet
+    packetSize = 1024;
+    SendStr(1:packetSize) = 'q';
+    SendStr(1:length(tempStr)+1) = [tempStr '/'];
+    fwrite(Dest, SendStr);    %% send UDP packet
 end
 
-function CleanUP(UDP1, UDP2)
-if ~isempty(UDP1)
-    fclose(UDP1);
-end
-if ~isempty(UDP2)
-    fclose(UDP2);
-end
-
-if xippmex
-    xippmex('close')
-end
-
+function CleanUDP(temp1, temp2)
+    if ~isempty(temp1)
+        fclose(temp1);
+    end
+    
+    if ~isempty(temp2)
+        fclose(temp2);    
+    end
 end

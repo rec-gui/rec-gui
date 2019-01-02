@@ -46,6 +46,9 @@ if connectServer
             readasync(Myudp);  % start async. reading to control flow and check eye pos
         catch
             disp('Fatal erro in establishing UDP connection');
+            disp('MATLAB needs to restart');
+            disp('Press any key....');
+            pause;
             exit;
         end
         
@@ -60,6 +63,9 @@ if connectServer
                 readasync(Myudp_eye);  % start async. reading to control flow and check eye pos    
             catch
                 disp('Fatal error in establishing UDP connection');
+                disp('MATLAB needs to restart');
+                disp('Press any key....');
+                pause;
                 exit;
             end                        
         end
@@ -135,7 +141,7 @@ Screen('Preference', 'Verbosity', 0); % Increase level of verbosity for debug pu
 Screen('Preference','VisualDebugLevel', 0); % control verbosity and debugging, level:4 for developing, level:0 disable errors
 
 VP.screenID = max(Screen('Screens'));    %Screen for display.
-[VP.window,VP.Rect] = PsychImaging('OpenWindow',VP.screenID,[VP.backGroundColor],[],[],[], VP.stereoMode, VP.multiSample);
+[VP.window,VP.Rect] = PsychImaging('OpenWindow',VP.screenID, VP.backGroundColor,[],[],[], VP.stereoMode, VP.multiSample);
 [VP.windowCenter(1),VP.windowCenter(2)] = RectCenter(VP.Rect); %Window center
 
 VP.windowWidthPix = VP.Rect(3)-VP.Rect(1);
@@ -418,7 +424,7 @@ while ~IsESC && OnGoing
                            try
                                load(StiPF);
                            catch
-                               SendUDPGUI(Myudp, ['1 fail to load ' StiPF]);
+                               SendUDPGui(Myudp, ['1 fail to load ' StiPF]);
                            end
                        case -101
                            StiP.ITI = str2double(CMD_Word);  % update inter trial interval
@@ -456,21 +462,21 @@ while ~IsESC && OnGoing
                        case -11
                            xPosFixation = str2double(CMD_Word); % update horizontal position of fixation point
                            if xPosFixation ~= xPosOld % if it is new position, trial will be restarted
-                               xPosOld = xPosFiation;
+                               xPosOld = xPosFixation;
                                StateID = 100;
                                FirstStep=1;
                            end
                        case -12
-                           yPosFixation = str2double(CMD_Word); % update vertical position of fixation point
+                           yPosFixation = -1* str2double(CMD_Word); % update vertical position of fixation point
                            if yPosFixation ~= yPosOld % if it is new position, trial will be restarted
-                               yPosOld = yPosFiation;
+                               yPosOld = yPosFixation;
                                StateID = 100;
                                FirstStep=1;
                            end
                        case -13
                            zPosFixation = str2double(CMD_Word); % update distance of fixation point (depth)
                            if zPosFixation ~= zPosOld % if it is new position, trial will be restarted
-                               zPosOld = zPosFiation;
+                               zPosOld = zPosFixation;
                                StateID = 100;
                                FirstStep=1;
                            end
@@ -541,7 +547,7 @@ while ~IsESC && OnGoing
                 
                 % send trial information to GUI
                 if connectServer
-                    tempStr = [num2str(xPosFixation) ' ' str2double(yPosFixation) ' ' str2double(zPosFixation) ' ' num2str(StateID) ' ' num2str(StateTime)];
+                    tempStr = [num2str(xPosFixation) ' ' str2double(-1*yPosFixation) ' ' str2double(zPosFixation) ' ' num2str(StateID) ' ' num2str(StateTime)];
                     SendUDPGui(Myudp,['6 111 ' tempStr]);  % send 'Trial_Start' signal
                     SendUDPGui(Myudp,['1 200 ' num2str(PresentedTNum)]);  % update system low in GUI
                     SendUDPGui(Myudp,['1 201 ' num2str(FinishedTNum)]); % update system low in GUI
@@ -557,7 +563,7 @@ while ~IsESC && OnGoing
             if FirstStep==1
                 % setup fixation window for checking fixation violation
                 if connectServer
-                    tempStr = ['50 1 ' num2str(xPosFixation) ' ' num2str(yPosFixation) ' ' num2str(zPosFixation) ' ' num2str(VersionThreshold) ' ' LColor ' ' RColor];
+                    tempStr = ['50 1 ' num2str(xPosFixation) ' ' num2str(-1*yPosFixation) ' ' num2str(zPosFixation) ' ' num2str(VersionThreshold) ' ' LColor ' ' RColor];
                     SendUDPGui(Myudp,tempStr);  % send 'Trial_Start' signal
                     SendUDPGui(Myudp,'51'); %% start eye window
                     SendUDPGui(Myudp,'53'); %% start vergence window

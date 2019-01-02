@@ -40,6 +40,9 @@ if connectServer
             readasync(Myudp);  % start async. reading to control flow and check eye pos
         catch
             disp('Fatal erro in establishing UDP connection');
+            disp('MATLAB needs to restart');
+            disp('Press any key....');
+            pause;
             exit;
         end
         
@@ -54,6 +57,9 @@ if connectServer
                 readasync(Myudp_eye);  % start async. reading to control flow and check eye pos    
             catch
                 disp('Fatal error in establishing UDP connection');
+                disp('MATLAB needs to restart');
+                disp('Press any key....');
+                pause;
                 exit;
             end                        
         end
@@ -98,7 +104,7 @@ VP.multiSample = 8;   % number for multi-sampling to make edge of stimulus smoot
 % load default parameters for stimulus and experimental control
 % if needed, it can be changed in runtime
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-StiPF = 'Calibration_Conf.mat';
+StiPF = 'stim_default.mat';
 if exist(StiPF)    
     try
         load(StiPF); % load default stimulus parameters        
@@ -106,7 +112,7 @@ if exist(StiPF)
         % VP is a structure that contains all parameters of drawing screen
         % of Psychtoolbox.
         VP.backGroundColor = StiP.backGroundColor;  % [R G B] [0-255 0-255 0-255]
-        VP.fixColor = StiP.dotColor; % [R G B] [0-255 0-255 0-255]
+        VP.fixationColor = StiP.dotColor; % [R G B] [0-255 0-255 0-255]        
     catch
         disp('fail to load stimulus parameter file');
     end
@@ -128,11 +134,12 @@ Screen('Preference', 'Verbosity', 0); % Increase level of verbosity for debug pu
 Screen('Preference','VisualDebugLevel', 0); % control verbosity and debugging, level:4 for developing, level:0 disable errors
 
 VP.screenID = max(Screen('Screens'));    %Screen for display.
-[VP.window,VP.Rect] = PsychImaging('OpenWindow',VP.screenID,[VP.backgroundColor],[],[],[], VP.stereoMode, VP.multiSample);
+[VP.window,VP.Rect] = PsychImaging('OpenWindow',VP.screenID, VP.backGroundColor,[],[],[], VP.stereoMode, VP.multiSample);
 
 [VP.windowCenter(1),VP.windowCenter(2)] = RectCenter(VP.Rect); %Window center
 VP.windowWidthPix = VP.Rect(3)-VP.Rect(1);
 VP.windowHeightPix = VP.Rect(4)-VP.Rect(2);
+VP.CopyBuffer = Screen('OpenOffScreenWindow',-1, []); %, [], [], [], VP.multiSample);
 
 HideCursor(VP.screenID);
 
@@ -173,7 +180,7 @@ if connectServer
     % Myudp - for sending/recieving events and control info
     % Myudp_eye - for sending/recieving eye movement related events
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if ~isempty(Myudp)        
+    if ~isempty(Myudp)             
         SendUDPGui(Myudp, '-1 8256');   %% send probe packet to establish initial UDP connection
         tempEnd = 1; IsESC = 0;
         while tempEnd && ~IsESC
@@ -208,7 +215,7 @@ if connectServer
                             case '-1'
                                 if CMD_Word == 81257
                                     SendUDPGui(Myudp,'-1 8257');
-                                    SendUDPGui(Myudp,['7 ' num2str(VP.screenWidth)]);
+                                    SendUDPGui(Myudp,['7 ' num2str(VP.screenWidthbackGroundColor)]);
                                     SendUDPGui(Myudp,['8 ' num2str(VP.screenHeight)]);
                                     disp('Success in connection GUI run first');
                                 elseif CMD_Word == 8256
@@ -247,6 +254,9 @@ VP.screenHeightPix = VP.windowHeightPix;
 glBlendFunc(GL.SRC_ALPHA,GL.ONE_MINUS_SRC_ALPHA); %Alpha blending for antialising
 Screen('BlendFunction', VP.CopyBuffer, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+% define colors on left right eye 
+LColor = 'green'; RColor = 'blue';
+
 VP.ifi = Screen('GetFlipInterval', VP.window);
 VP.frameRate = Screen('FrameRate',VP.window);
 if VP.stereoMode
@@ -262,6 +272,8 @@ VP.pixelsPerMm = VP.screenWidthPix/VP.screenWidthMm; %% pixels/Mm
 VP.MmPerDegree = VP.screenWidthMm/VP.screenWidthDeg;
 VP.degreesPerMm = 1/VP.MmPerDegree;
 VP.aspect = VP.screenWidthPix/VP.screenHeightPix;
+
+VP.fixationDotSize = round(StiP.dotSize * VP.pixelsPerDegree); % update fixation dot size
 VP.CopyBuffer = Screen('OpenOffScreenWindow',-1, []); %, [], [], [], VP.multiSample);
 
 if connectServer
@@ -292,7 +304,7 @@ while ~IsESC && OnGoing
         end
     end
     
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % continouse checking UDP packet for update parameters 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if connectServer
@@ -366,6 +378,14 @@ while ~IsESC && OnGoing
                             StiP.fixationAcqDura = str2double(CMD_Word);
                         case '-104'
                             StiP.fixationDura = str2double(CMD_Word);
+                        case '-105'
+                            tempR = str2double(CMD_Word);
+                           VP.fixationDotSize = round(tempR * VP.pixelsPerDegree); % update fixation dot size
+                           if VP.fixationDotSize > 100
+                               VP.fixationDotSzie = 100;
+                           end
+                           StiP.dotSize = tempR; % save dot size as degree                           
+                           save(StiPF,'StiP');                                                      
                         case '-106'
                             StiP.ITI = str2double(CMD_Word);
                         case '-107'
@@ -399,7 +419,7 @@ while ~IsESC && OnGoing
                 for view = 0:VP.stereoViews
                     % Select 'view' to render (left- or right-eye):
                     Screen('SelectStereoDrawbuffer', VP.window, view);
-                    Screen('FillRect',VP.window, VP.backgroundColor);
+                    Screen('FillRect',VP.window, VP.backGroundColor);
                 end
                 VP.vbl = Screen('Flip', VP.window,[],1);
                 FirstStep = 0;
@@ -415,7 +435,7 @@ while ~IsESC && OnGoing
                 for view = 0:VP.stereoViews
                     % Select 'view' to render (left- or right-eye):
                     Screen('SelectStereoDrawbuffer', VP.window, view);
-                    Screen('FillRect',VP.window, VP.backgroundColor);
+                    Screen('FillRect',VP.window, VP.backGroundColor);
                 end
                 VP.vbl = Screen('Flip', VP.window,[],1);
                 StateTime = GetSecs;
@@ -441,7 +461,7 @@ while ~IsESC && OnGoing
                 for view = 0:VP.stereoViews
                     % Select 'view' to render (left- or right-eye):
                     Screen('SelectStereoDrawbuffer', VP.window, view);
-                    Screen('FillRect',VP.window, [VP.backgroundColor(1:3)]);
+                    Screen('FillRect',VP.window, [VP.backGroundColor(1:3)]);
                     Screen('DrawDots', VP.window, [xPosFixation+(VP.Rect(3)/2), -yPosFixation + (VP.Rect(4)/2)],VP.fixationDotSize, VP.fixationColor, [],2);
                 end
                 VP.vbl = Screen('Flip', VP.window,[],1);
@@ -511,6 +531,8 @@ while ~IsESC && OnGoing
                     Datapixx('RegWrRd');
                     Datapixx('SetDoutValues', 1);
                     Datapixx('RegWrRd');
+                else
+                    % <add code for reward> 
                 end
                 FinishedT = FinishedT+1;
                 if connectServer
@@ -528,6 +550,8 @@ while ~IsESC && OnGoing
                             Datapixx('RegWrRd');
                             Datapixx('SetDoutValues', 0);
                             Datapixx('RegWrRd');
+                        else
+                            % <add code for reward off>
                         end
                         SendUDPGui(Myudp,['6 112 ' num2str(StateID) ' ' num2str(StateTime)]);  % send 'Trial_End' signal
                     end
@@ -551,6 +575,14 @@ ShowCursor; %show the cursor
 Screen('CloseAll'); %close the display window
 close all
 Priority(0);
+
+if Datapixx('isReady')	
+	Datapixx('SetDoutValues',0); %% stop rewarding (bit0)
+    Datapixx('RegWrRd');
+    Datapixx('Close');    
+else
+    % <add codes for reseting TTL of rewarding
+end
 
 end
 
