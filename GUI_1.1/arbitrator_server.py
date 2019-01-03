@@ -186,28 +186,14 @@ class ArbitratorServer:
 
                         for i in range(0, tempnum):
                             templist = cmd_lists[i].split()
-
                             if i == 0:
                                 tempx = float(templist[2])
                                 tempy = float(templist[3])
-                                if tempx == -1 and tempy == -1:
-                                    if not globls.Shocked:
-                                        globls.shock_on()
-                                        data_str = '6 201 /'
-                                        temp_data = data_str+"""{}""".format('q'*( 1024 - len(data_str.encode())))
-                                        DataFileObj.save_raw_eye_taskdata(
-                                            data_recv_ts, 0,0,0,0, task_data=temp_data)
-                                        globls.update_shock_flag(1)
-                                else:
-                                    # globls.prt.setData(0)
-                                    if not globls.ManualShock:
-                                        if globls.Shocked:
-                                            globls.shock_off()
-                                            data_str = '6 200 /'
-                                            temp_data = data_str+"""{}""".format('q'*( 1024 - len(data_str.encode())))
-                                            globls.update_shock_flag(0)
-                                            DataFileObj.save_raw_eye_taskdata(
-                                                data_recv_ts, 0,0,0,0, task_data=temp_data)
+
+                                data_str = '6 9 /'
+                                temp_data = data_str+"""{}""".format('q'*( 1024 - len(data_str.encode())))
+                                DataFileObj.save_raw_eye_taskdata(data_recv_ts, 0,0,0,0, task_data=temp_data)
+
                             else:
                                 tempx = float(templist[1])
                                 tempy = float(templist[2])
