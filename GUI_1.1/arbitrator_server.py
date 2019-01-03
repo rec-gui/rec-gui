@@ -6,7 +6,7 @@ import socket
 import time
 import copy
 import utility as util
-from digitalIO import DIO
+# from digitalIO import DIO
 from constants import Constant as const
 from vergence_version import ValidateVergenceVersion
 from global_parameters import Globals as globls
@@ -19,7 +19,9 @@ log = logging.getLogger(__name__)
 
 class ArbitratorServer:
     def __init__(self):
-	self.DIO_obj = DIO()
+
+        # self.DIO_obj = DIO()
+
         # for programing printer port
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -154,16 +156,16 @@ class ArbitratorServer:
                         # Reset this to -1, -1 so that next time this is queried from
                         # Arbitrator server new values are sent
                         globls.update_last_sent_eye_in_out([-1, -1])
-                    elif int(cmd_list[0]) == Constant.REWARD_ON:
-                        # print cmd_list
-                        self.DIO_obj.write_digital_bit(1)
-                        #self.DIO_obj.reward_on()
-                        globls.dump_log('Reward On')
-                    elif int(cmd_list[0]) == Constant.REWARD_OFF:
-                        # print cmd_list
-                        self.DIO_obj.write_digital_bit(0)
-                        #self.DIO_obj.reward_off()
-                        globls.dump_log('Reward Off')
+                    # elif int(cmd_list[0]) == Constant.REWARD_ON:
+                    #     # print cmd_list
+                    #     self.DIO_obj.write_digital_bit(1)
+                    #     #self.DIO_obj.reward_on()
+                    #     globls.dump_log('Reward On')
+                    # elif int(cmd_list[0]) == Constant.REWARD_OFF:
+                    #     # print cmd_list
+                    #     self.DIO_obj.write_digital_bit(0)
+                    #     #self.DIO_obj.reward_off()
+                    #     globls.dump_log('Reward Off')
                     elif int(cmd_list[0]) == Constant.VERGENCE_ON:
                         # print cmd_list
                         globls.udpdate_vergence_display(True)

@@ -4,7 +4,7 @@ Main function
 import Tkinter as tk
 import threading
 import utility as util
-from constants import Constant as const
+from constants import (Constant as const, EyeRecordingMethods)
 from global_parameters import Globals as globls
 from eye_interpret import EyeInterpret
 from arbitrator_server import ArbitratorServer
