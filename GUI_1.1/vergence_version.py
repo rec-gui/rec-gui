@@ -137,7 +137,7 @@ class ValidateVergenceVersion():
         # (right_eye[const.X]-right_tp_eye[0]) ** 2)
         # vergence_error_x = vergence_magnitude_error
         # vergence_error_y = 0
-        if (vergence_magnitude_error > vergence):
+        if (vergence_magnitude_error > vergence/2):
             # Send vergence not in specified limit
             vergence_error_in_limit = 0
 
