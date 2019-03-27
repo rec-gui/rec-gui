@@ -203,25 +203,25 @@ while OnGoing
     switch StateID
         case 100 % idling 
             if FirstStep==1
-                StateTime = tic;                
+                StartTime = tic;                
                 FirstStep = 0;
             else
-                toc(StateTime);
-                if StartTime>1
+                StateTime = toc(StartTime);
+                if StateTime>1
                     TotalSec = TotalSec+1;
-                    disp(['Time passing (sec): ' num2str(TotalSec)]);
-                    StateTime = tic;
+                    %disp(['Time passing (sec): ' num2str(TotalSec)]);
+                    StartTime = tic;
                 end                
             end
         case 110 %% it receive mouse position information
             FeedBackNum = FeedBackNum +1;
             disp(['Mouse Position Received: ' num2str(FeedBackNum)]);
-            disp(['X: ' num2str(MPos_X) ' Y: ' num2str(MPos_Y)]);
+            disp(['X: ' num2str(MPos_X,5) ' Y: ' num2str(MPos_Y,5)]);
             
             % return back to the GUI
-            tempStr = ['1 110 ' num2str(MPos_X)]; 
+            tempStr = ['1 110 ' num2str(MPos_X,3)]; 
             SendUDPGui(Myudp, tempStr);  
-            tempStr = ['1 120 ' num2str(MPos_Y)]; 
+            tempStr = ['1 120 ' num2str(MPos_Y,3)]; 
             SendUDPGui(Myudp, tempStr);  
             
             StateID = 100;
