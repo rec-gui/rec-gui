@@ -23,7 +23,7 @@ class EyeInterpret:
         self.calibration = calibration()
         self.eye_check = ValidateVergenceVersion()
 
-        # Initialize  based on the recording method selection
+        # Initialize based on the recording method selection
         if globls.eye_recording_method == EyeRecordingMethods.EYE_LINK:
             self.digital_reader()
         elif globls.eye_recording_method == EyeRecordingMethods.EYE_COIL:
@@ -33,7 +33,7 @@ class EyeInterpret:
         pylink = importlib.import_module('pylink')
 
         '''
-        Read the eye data fro eye link
+        Read the eye data from eyelink
         :return:
         '''
         try:
@@ -45,7 +45,7 @@ class EyeInterpret:
             last_read_eye_time = 0
 
             while globls.is_program_running:
-                # Sleep for 1ms
+                # Sleep for 1 ms
                 time.sleep(.001)
 
                 dt = self.EyeTrack.getNewestSample()  # check for new sample update
@@ -75,15 +75,15 @@ class EyeInterpret:
                         #     eye_closed = True
                         # print pupilsize_left, globls.pupil_size['right']
 
-                        # convert this to co-ordinate (0, 0) at centre
+                        # convert this to coordinate (0, 0) at center
                         eyepos_lx, eyepos_ly = util.shift_to_centre(lx, ly)
                         eyepos_lx, eyepos_ly = util.convert_pix_to_mm(eyepos_lx, eyepos_ly)
 
-                        # convert this to co-ordinate (0, 0) at centre
+                        # convert this to coordinate (0, 0) at center
                         eyepos_rx, eyepos_ry = util.shift_to_centre(rx, ry)
                         eyepos_rx, eyepos_ry = util.convert_pix_to_mm(eyepos_rx, eyepos_ry)
 
-                        # Write eye data to list storing Left and right X, Y and Z data
+                        # Write eye data to list storing left and right X, Y and Z data
                         # data that we get from eyelink has only left and right eye
                         globls.update_last_raw_eye_data(eyepos_lx, eyepos_ly, eyepos_rx, eyepos_ry)
                         DataFileObj.save_raw_eye_taskdata(eye_recv_data_ts, eyepos_lx, eyepos_ly, eyepos_rx, eyepos_ry)
@@ -103,7 +103,7 @@ class EyeInterpret:
                         globls.update_offset_gain_applied_eye_data(left_og_x, left_og_y, right_og_x,
                                                                                      right_og_y)
 
-                        # If eye closed then do not check eye in out or vergence error
+                        # If eye closed, then do not check eye in out or vergence error
                         if eye_closed:
                             return
 
@@ -137,14 +137,11 @@ class EyeInterpret:
                 pupilsize_left, pupilsize_right = 2000, 2000
                 temp_eye_data = []
 
-                #  *** To DO: Read the eye coil all channel data ***
                 temp_eye_pos_channel_data = globls.eye_recording_method_obj.get_eye_positions_channel()
                 for channel in temp_eye_pos_channel_data:
                     temp_eye_data.append(self.analog_reader_obj.get_channel_analog_value(int(channel)))
                 eye_recv_data_ts = time.time()
 
-                # *** TO DO: Use the channel marked for ready Left, right x, y, z and as well
-                # convert the values to co-ordinate starting 00 @ centre in mm ***
                 eyepos_lx, eyepos_ly = temp_eye_data[0], temp_eye_data[1]
                 eyepos_rx, eyepos_ry = temp_eye_data[0], temp_eye_data[1]
 
@@ -153,7 +150,7 @@ class EyeInterpret:
                             pupilsize_right < globls.pupil_size['right']):
                     eye_closed = True
 
-                # Write eye data to list storing Left and right X, Y and Z data
+                # Write eye data to list storing left and right X, Y and Z data
                 # data that we get from eyelink has only left and right eye
                 globls.update_last_raw_eye_data(eyepos_lx, eyepos_ly, eyepos_rx, eyepos_ry)
                 DataFileObj.save_raw_eye_taskdata(eye_recv_data_ts, eyepos_lx, eyepos_ly, eyepos_rx, eyepos_ry)
@@ -171,7 +168,7 @@ class EyeInterpret:
                 globls.update_offset_gain_applied_eye_data(left_og_x, left_og_y, right_og_x,
                                                                              right_og_y)
 
-                # If eye closed then do not check eye in out
+                # If eye closed, then do not check eye in out
                 if eye_closed:
                     return
 
@@ -199,7 +196,7 @@ class EyeInterpret:
         # update the raw eye sample to global variable
         globls.update_raw_eye_data_sample(left_eye_x, left_eye_y, right_eye_x, right_eye_y, remove=True, append=True)
 
-        # Calculate the mean and return the mean value
+        # calculate the mean and return the mean value
         eye_data_array = np.array(globls.raw_eye_data_sample)
         left_mean = np.mean(eye_data_array[const.LEFT], axis=0).tolist()
         right_mean = np.mean(eye_data_array[const.RIGHT], axis=0).tolist()
@@ -218,7 +215,7 @@ class EyeInterpret:
         left_eye_y = float(left_mean_y * globls.offset_gain_config[ConfigLabels.LEFT_EYE_GAIN_Y] +
                            globls.offset_gain_config[ConfigLabels.LEFT_EYE_OFFSET_Y])
 
-        # RIght eye
+        # RIGHT Eye
         right_eye_x = float(right_mean_x * globls.offset_gain_config[ConfigLabels.RIGHT_EYE_GAIN_X] +
                             globls.offset_gain_config[ConfigLabels.RIGHT_EYE_OFFSET_X])
 

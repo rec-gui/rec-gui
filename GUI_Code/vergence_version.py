@@ -1,6 +1,6 @@
 '''
 Eye in or out of window
-vergence error caluclation
+vergence error calculation
 '''
 import math
 import utility as util
@@ -20,7 +20,7 @@ class ValidateVergenceVersion():
 
     def eye_in_out(self):
         '''
-            validate the version data
+            Validate the version data
             Eye in or out of the specific window
         '''
         left_eye_x = globls.eye_data[const.LEFT][const.X]
@@ -44,7 +44,6 @@ class ValidateVergenceVersion():
                                                                 points_list[i][2])
             diameter_in_mm, tmp = util.convert_deg_to_mm(points_list[i][3])
 
-            # Has left and right eye selected left side of the choice
             # TP: x, y, Diameter
             left_eye_in = self._is_eye_in(
                 left_eye_x, left_eye_y, left_tp_x, left_tp_y, diameter_in_mm/2)
@@ -58,10 +57,10 @@ class ValidateVergenceVersion():
             if left_eye_in_out and right_eye_in_out:
                 break
 
-        # If UI has any specific Eye selected
+        # If UI has any specific eye selected
         left, right = globls.eye_selected['left'], globls.eye_selected['right']
 
-        # If only left or only right eye is selected on UI then
+        # If only left or only right eye is selected on UI, then
         # set the other eye to be in
         if left and not right:
             right_eye_in_out = left_eye_in_out
@@ -91,14 +90,14 @@ class ValidateVergenceVersion():
         iod = globls.arbitrator_display['iod_mm']
         screendist = globls.arbitrator_display['screen_distance_mm']
 
-        # Get the Target point information for which the vergence needs to be verified
+        # Get the target point information for which the vergence needs to be verified
         left_tp_x, left_tp_y, right_tp_x, right_tp_y = \
             util.get_disparity_offset_applied_points(x, y, z)
 
         # print left_tp_x, left_tp_y, right_tp_x, right_tp_y
 
         # CALCULATE IDEAL GAZE ANGLES
-        # by this convention, looking straight ahead is 0 degrees, looking towards
+        # By this convention, looking straight ahead is 0 degrees, looking towards
         # your nose is negative, looking away from your nose is positive. Fixation
         # on a point along the gaze direction of the cyclopean eye looking straight
         # ahead will give you the same coordinate for left & right eyes.

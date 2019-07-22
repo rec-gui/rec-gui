@@ -1,5 +1,5 @@
 '''
-Utility to send data to 3rd party server, convertion function
+Utility to send data to 3rd party server, conversion function
 '''
 
 import math
@@ -22,7 +22,7 @@ def data_padder(src_string, data_length=globls.constant['data_size_length'],
         return src_string
 
 
-# Send data to any process provided socket and address is provided
+# Send data to any process provided socket and address is given
 def send_data(sock, dest_addr, data_string, msg=None):
     data = data_string
     tmp_msg = ''
@@ -38,7 +38,7 @@ def send_data(sock, dest_addr, data_string, msg=None):
             log.exception(e)
             tmp_msg = 'Exception Sending ' + msg if msg else ''
     else:
-        tmp_msg = 'Matlab socket not initilized to Send ' + msg if msg else ''
+        tmp_msg = 'MATLAB socket not initialized to Send ' + msg if msg else ''
     globls.dump_log('Error: {}'.format(tmp_msg))
     return data
 
@@ -94,7 +94,6 @@ def convert_pix_to_deg(x_pix=None, y_pix=None, screen_distance=None):
     return x_deg, y_deg
 
 
-# Cross check this this is not used as of now but needs to be checked
 def convert_mm_to_deg(x_mm=None, y_mm=None):
     x_deg = y_deg = 0
     if x_mm is not None:
@@ -113,7 +112,7 @@ def convert_mm_to_pix(x_mm=None, y_mm=None):
     return x_pix, y_pix
 
 
-# UIConstants.WINDOW_WIDTH_IN_PIXEL / 2 -> (0, 0) is the centre of the screen
+# UIConstants.WINDOW_WIDTH_IN_PIXEL / 2 -> (0, 0) is the center of the screen
 def shift_to_centre(x_pix, y_pix):
     new_x = x_pix - (globls.arbitrator_window_width / 2)
     new_y = (globls.arbitrator_window_height / 2) - y_pix
@@ -160,7 +159,7 @@ def get_disparity_offset_applied_points(x, y, z):
 # Yoffset = YPos*(ZPos+ScDist)/ScDist-YPos;
 
 def send_screen_parameters():
-    # send the subject specific configuration to 3rd party server
+    # Send the subject specific configuration to 3rd party server
     data = '{} {}/{} {}/{} {}/{} {}/'.format(
         const.SCREEN_HEIGHT, globls.arbitrator_display['screen_height_mm'],
         const.SCREEN_DISTANCE, globls.arbitrator_display['screen_distance_mm'],

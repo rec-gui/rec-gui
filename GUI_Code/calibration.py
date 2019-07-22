@@ -23,28 +23,28 @@ class Calibration():
 
     def init_calibration_parameter(self):
         '''
-        Initlize the calibration parameters. This would be called during init and when a clear
-        calibration is initliated
+        Initialize the calibration parameters. This would be called during init and when a clear
+        calibration is initiated.
         '''
-        # Maintains list of position used for calibration in the format [R[(x,y),..], L[(x,y)...]]
+        # Maintains list of positions used for calibration in the format [R[(x,y),..], L[(x,y)...]]
         self.true_eyepos = [[], []]
 
-        # Measured Eye position has the mean of the 100 samples for any given position
+        # Measured eye position has the mean of the 100 samples for any given position
         self.measured_eyepos = [[], []]
 
         self.accepted_eyepos_ploted_widget = []
 
     def process_accept_measured_eye_pos(self):
         '''
-        Accept the measure eye position to calculate the offset and gain
+        Accept the measured eye position to calculate the offset and gain
         :return:
         '''
-        # Send Reward to Arbitrator server. comment this if not required
+        # Send Reward to Arbitrator server. Comment this if not required
         data = "{} {}/".format(const.REWARD, 1)
         util.send_data(globls.arbitrator_sock, globls.arbitrator_sock_addr, data, msg="Reward signal")
         ts = time.time()
 
-        # Retrive the accepted mean eye value from global parameter and
+        # Retrieve the accepted mean eye value from global parameter and
         # store those values for further calculation
         left_mean = globls.eye_data[const.LEFT]
         right_mean = globls.eye_data[const.RIGHT]
@@ -52,7 +52,7 @@ class Calibration():
         self.measured_eyepos[const.LEFT].append(left_mean)
         self.measured_eyepos[const.RIGHT].append(right_mean)
 
-        # get and save the true position of the centre point
+        # get and save the true position of the center point
         true_pos_leftx, true_pos_lefty, true_pos_rightx, true_pos_righty = \
             util.get_disparity_offset_applied_points(globls.centre_of_windows[0][0],
                                                        globls.centre_of_windows[0][1],
@@ -88,7 +88,7 @@ class Calibration():
         calculate offset and gain
         :return:
         '''
-        # Flag for enabling Auro calibration
+        # Flag for enabling Auto calibration
         self.enable_auto_calibration_data_collect = False
 
         # Need to transpose as the values are appended as rows into a list
@@ -109,8 +109,8 @@ class Calibration():
             (measured_eyepos_transpose[const.RIGHT][const.Y],
              np.ones(len(measured_eyepos_transpose[const.RIGHT][const.Y])))))
 
-        # Convert it to matrix for performing matrix multiplication as list multiplication and
-        # array multiplication of different dimentions are not allowed
+        # Convert it to matrix for performing matrix multiplication as a list multiplication and
+        # array multiplication of different dimensions are not allowed
         true_eye_pos_lx = np.matrix(true_eye_pos_transpose[const.LEFT][const.X])
         true_eye_pos_ly = np.matrix(true_eye_pos_transpose[const.LEFT][const.Y])
         true_eye_pos_rx = np.matrix(true_eye_pos_transpose[const.RIGHT][const.X])

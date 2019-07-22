@@ -1,5 +1,5 @@
 '''
-API to draw the widgets with various option
+API to draw the widgets with various options
 '''
 
 import Tkinter as tk
@@ -183,7 +183,7 @@ class WidgetAPI():
         frame = tk.Frame(parent, relief=tk.GROOVE, borderwidth="2")
         frame.place(relx=frame_dict['relx'], rely=frame_dict['rely'],
                     relheight=frame_dict['relheight'], relwidth=frame_dict['relwidth'])
-        # create a canvas object and a vertical scrollbar for scrolling it
+        # Create a canvas object and a vertical scrollbar for scrolling it
         vscrollbar = tk.Scrollbar(frame, orient=tk.VERTICAL)
         vscrollbar.pack(fill=tk.Y, side=tk.RIGHT, expand=tk.FALSE)
         canvas = tk.Canvas(frame, bd=0, highlightthickness=0,
@@ -195,26 +195,26 @@ class WidgetAPI():
         canvas.xview_moveto(0)
         canvas.yview_moveto(0)
         #
-        # create a frame inside the canvas which will be scrolled with it
+        # Create a frame inside the canvas which will be scrolled with it
         interior = tk.Frame(canvas)
         interior_id = canvas.create_window(0, 0, window=interior,
                                            anchor=tk.NW)
 
-        # track changes to the canvas and frame width and sync them,
+        # Track changes to the canvas and frame width and sync them,
         # also updating the scrollbar
         def _configure_interior(event):
-            # update the scrollbars to match the size of the inner frame
+            # Update the scrollbars to match the size of the inner frame
             size = (interior.winfo_reqwidth(), interior.winfo_reqheight())
             canvas.config(scrollregion="0 0 %s %s" % size)
             if interior.winfo_reqwidth() != canvas.winfo_width():
-                # update the canvas's width to fit the inner frame
+                # Update the canvas' width to fit the inner frame
                 canvas.config(width=interior.winfo_reqwidth())
 
         interior.bind('<Configure>', _configure_interior)
 
         def _configure_canvas(event):
             if interior.winfo_reqwidth() != canvas.winfo_width():
-                # update the inner frame's width to fill the canvas
+                # Update the inner frame's width to fill the canvas
                 canvas.itemconfigure(interior_id, width=canvas.winfo_width())
 
         canvas.bind('<Configure>', _configure_canvas)
@@ -222,16 +222,13 @@ class WidgetAPI():
 
 WidgetApi = WidgetAPI()
 
-# The following code is added to facilitate the Scrolled widgets for text box.
+# The following code is added to facilitate the scrolled widgets for text box.
 class AutoScroll(object):
     '''
     Configure the scrollbars for a widget.
     '''
 
     def __init__(self, master):
-        #  Rozen. Added the try-except clauses so that this class
-        #  could be used for scrolled entry widget for which vertical
-        #  scrolling is not supported. 5/7/14.
         try:
             vsb = ttk.Scrollbar(master, orient='vertical', command=self.yview)
         except:
@@ -254,7 +251,7 @@ class AutoScroll(object):
         master.grid_columnconfigure(0, weight=1)
         master.grid_rowconfigure(0, weight=1)
 
-        # Copy geometry methods of master  (taken from ScrolledText.py)
+        # Copy geometry methods of master (taken from ScrolledText.py)
 
         methods = tk.Pack.__dict__.keys() + tk.Grid.__dict__.keys() \
               + tk.Place.__dict__.keys()
@@ -279,7 +276,7 @@ class AutoScroll(object):
         return str(self.master)
 
 def _create_container(func):
-    '''Creates a ttk Frame with a given master, and use this new frame to
+    '''Creates a ttk frame with a given master, and use this new frame to
     place the scrollbars and the widget.'''
     def wrapped(cls, master, **kw):
         container = ttk.Frame(master)

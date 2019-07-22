@@ -20,14 +20,14 @@ class Main:
         gui = Gui()
         globls.update_gui_parameters(gui_object=gui)
 
-        # Setup thread
+        # Set up thread
         # Set up the thread to do asynchronous socket
         # More can be made if necessary
         self.stop_threads = threading.Event()
         self.stop_threads.clear()
 
         if globls.eye_recording_method != EyeRecordingMethods.EYE_NONE:
-            # # Eye interpreter
+            # Eye interpreter
             self.eye_interpreter_thread = threading.Thread(target=EyeInterpret)
             self.eye_interpreter_thread.setDaemon(True)
             self.eye_interpreter_thread.start()
@@ -44,10 +44,10 @@ class Main:
 
     def exit_check_periodic_call(self):
         '''
-        cleanup on exit
+        Clean up on exit
         :return:
         '''
-        # Check every 100ms if program is running or quit
+        # Check every 100 ms if program is running or quit
         if globls.is_program_running:
             globls.gui_root.after(100, self.exit_check_periodic_call)
             return

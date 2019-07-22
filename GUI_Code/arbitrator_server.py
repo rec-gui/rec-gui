@@ -1,5 +1,5 @@
 '''
-   Code that process the thridy party server request
+   Code that processes the third party server request
 '''
 
 import socket
@@ -22,7 +22,7 @@ class ArbitratorServer:
 
         # self.DIO_obj = DIO()
 
-        # for programing printer port
+        # for programming printer port
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(('', globls.config_param['arbitrator_service']['local_port']))
@@ -44,7 +44,7 @@ class ArbitratorServer:
         Receiver loop to check the incoming packets
         :return:
         '''
-        # globls.dump_log("Running Matlab thread")
+        # globls.dump_log("Running MATLAB thread")
         globls.dump_log('Listening to 3rd party messages')
         while globls.is_program_running:
             try:
@@ -53,7 +53,7 @@ class ArbitratorServer:
 
                 # process the variables
                 if len(data):
-                    # Check if there is any delimiter in the message '/' if yes then split
+                    # Check if there is any delimiter in the message '/' if yes, then split
                     cmd_lists = data.split(globls.constant['message_delimiter'])
 
                     # Data before / is valid data read and remove the space
@@ -76,11 +76,11 @@ class ArbitratorServer:
                                                                            const.SCREEN_IOD,
                                                                            globls.arbitrator_display['iod_mm'])
                             util.send_data(globls.arbitrator_sock, globls.arbitrator_sock_addr, data,
-                                           'Connection Ack Message')
+                                           'Connection Acknowledge Message')
                             globls.update_load_subject_task_config_flag(True)
                         elif int(cmd_list[1]) == Constant.CONNECTION_ACK:
                             globls.connection_state = Constant.CONNECTION_ACK
-                            # Update this flag to ensure that the user knows what is the next step after connection is up
+                            # Update this flag to ensure that the user knows what the next step after connection is
                             globls.update_load_subject_task_config_flag(True)
 
                             # util.send_screen_parameters()
@@ -124,7 +124,7 @@ class ArbitratorServer:
 
                     elif int(cmd_list[0]) == Constant.SCREEN_WINDOW_HEIGHT:
                         globls.update_arbitrator_server_screen_resolution(height=int(cmd_list[1]))
-                        globls.dump_log('Received the screen Height and scale factor to display on GUI: {}'.
+                        globls.dump_log('Received the screen height and scale factor to display on GUI: {}'.
                                         format(globls.arbitrator_display['y_scale_factor']))
 
                     elif int(cmd_list[0]) == Constant.CENTRE_OF_WINDOWS:
@@ -134,7 +134,7 @@ class ArbitratorServer:
                         no_of_points = int(cmd_list[1])
                         config = []
                         lst = cmd_list[2:]
-                        # pair the data and give it to UI for updation
+                        # pair the data and give it to UI for update
                         for i in range(0, len(lst), 6):
                             config.append([float(lst[i]), float(lst[i + 1]), float(lst[i + 2]),
                                            float(lst[i + 3]), lst[i + 4], lst[i + 5]])
@@ -168,12 +168,12 @@ class ArbitratorServer:
                     #     globls.dump_log('Reward Off')
                     elif int(cmd_list[0]) == Constant.VERGENCE_ON:
                         # print cmd_list
-                        globls.udpdate_vergence_display(True)
+                        globls.update_vergence_display(True)
                         globls.dump_log('Vergence On')
 
                     elif int(cmd_list[0]) == Constant.VERGENCE_OFF:
                         # print cmd_list
-                        globls.udpdate_vergence_display(False)
+                        globls.update_vergence_display(False)
                         globls.dump_log('Vergence Off')
                         # Reset this to -1 so that next time this is queried from
                         # Arbitrator server new values are sent
@@ -210,14 +210,14 @@ class ArbitratorServer:
                     #
                     #         elif int(cmd_list[1]) == Constant.EVENT_STOP:
                     #             # This needs to be saved here as we dump the saved data to file
-                    #             # And data collection falg will be reset
+                    #             # And data collection flag will be reset
                     #             DataFileObj.save_raw_eye_taskdata(
                     #                 data_recv_ts,
                     #                 globls.last_raw_eye_data[0], globls.last_raw_eye_data[1],
                     #                 globls.last_raw_eye_data[2], globls.last_raw_eye_data[3],
                     #                 task_data=data)
                     #
-                    #             # Stop saving the data and dump tp file
+                    #             # Stop saving the data and dump to file
                     #             # Flag to stop saving the data is set inside this function
                     #             DataFileObj.dump_data_to_file()
                     #             globls.update_last_sent_vergence_error(-1)

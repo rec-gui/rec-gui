@@ -9,7 +9,7 @@ class Constant:
     # DUMP_DATA_CONTINUALLY = 0   # This should be in config file
     MAX_NO_OF_LINES_TO_DISPLAY = 500  # Maximum no of lines that can be written in text window
 
-    # Files where it will be stores
+    # Files where it will be stored
     CUR_DIR_NAME = os.path.dirname(__file__)  # relative directory path
     DEFAULT_CONFIG_FILE = 'default.conf'
     SUBJECT_DEFAULT_CONFIG_FILE = "subject_default.conf"
@@ -22,7 +22,7 @@ class Constant:
     GUI_PERIODIC_CALL = 40   # ms
     MAXIMUM_CENTRE_OF_WINDOW = 30
 
-    # X, Y, Z, index to grab from the
+    # X, Y, Z, index to grab from the data
     X = 0
     Y = 1
     Z = 2
@@ -36,7 +36,7 @@ class Constant:
     LEFT_EYE_COLOR = '#09cc00'  # '#21762e'  # green
     RIGHT_EYE_COLOR = '#0000db'  # red
 
-    # Constants related to messaged to be sent to and received from Arbitrator server
+    # Constants related to messages, to be sent to and received from Arbitrator server
     # Command -1 to -100 used for internal use
     COMMAND_WORD_CONNECTION = -1
     CONNECTION_START = 8256
@@ -134,8 +134,8 @@ class EyeRecordingMethods:
 
 class Vergence:
     UNSELECTED = 0
-    HORTIZONTAL_VERTICAL = 1
-    HORTIZONTAL = 2
+    HORIZONTAL_VERTICAL = 1
+    HORIZONTAL = 2
 
 class MouseClick:
     FEEDBACK = 1
@@ -200,7 +200,7 @@ class ConfigLabels:
     PUPIL_SIZE_R = 'right'
 
     # Label + Scroll box
-    NUMBER_OF_REPETATION = 'number_of_repetation'
+    NUMBER_OF_REPETITION = 'number_of_repetition'
     MOVING_SD_LIMIT = 'moving_sd_limit'
     MOVING_SD_TIME_LIMIT = 'moving_sd_time_limit'
 

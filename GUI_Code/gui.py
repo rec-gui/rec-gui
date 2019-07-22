@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 class Gui:
     def __init__(self):
         """
-            Initlization of GUI valriables to access widgets, frames
+            Initialization of GUI variables to access widgets, frames
         """
         # Draw GUI window based on the screen width and height
         width = globls.gui_root.winfo_screenwidth()
@@ -38,11 +38,11 @@ class Gui:
         globls.gui_root.configure(background="#d9d9d9")
         globls.gui_root.protocol("WM_DELETE_WINDOW", self.on_exit)
 
-        # Initlization of objects for various classes which is going to be used by GUI
+        # Initialization of objects for various classes which are going to be used by GUI
         self.file = File()
         self.t1 = None
 
-        # Initlize the global parameters for GUI
+        # Initialize the global parameters for GUI
         # eye, version window, vergence window parameters
         self.eye_pos_text = tk.StringVar()
         self.stim_pos_text = tk.StringVar()
@@ -60,18 +60,18 @@ class Gui:
         self.vergence_eye_widget = [None, None]     # (x, y)
         self.vergence_window = None
         # self.vergence_window_size_changed = False
-        # Window widgets have Left and right widget obj for point and window
+        # Window widgets have Left and Right widget obj for point and window
         # [window left, window right, pt left, pt right]
         self.centre_pt_window_widget = []
         self.last_drawn_centre_point = []
 
-        # # Trial frame parameters
-        # self.trail_status = []
+        # Trial frame parameters
+        # self.trial_status = []
         # for i in range(TrialsStats.TRIAL_LABEL_10 + 1):
-        #     self.trail_status.append(tk.IntVar())
+        #     self.trial_status.append(tk.IntVar())
 
         # offset, gain, parameters
-        self.eye_check_button = [tk.IntVar(), tk.IntVar()]  # [left, Right]
+        self.eye_check_button = [tk.IntVar(), tk.IntVar()]  # [Left, Right]
         self.v_left_offset = tk.StringVar()
         self.v_left_gain = tk.StringVar()
         self.h_left_offset = tk.StringVar()
@@ -87,7 +87,7 @@ class Gui:
 
         # Draw calibration controls parameters
         self.calibration_type = tk.IntVar()
-        # In case of error want to revert back to previous state
+        # In case of error, want to revert back to previous state
         self.calibration_type_prev = 0
         self.clear_button = None
         self.accept_button = None
@@ -107,7 +107,7 @@ class Gui:
         self.auto_calib_cur_index = 0
         self.auto_calib_entries = []
 
-        # receptive field mapping variables
+        # Receptive field mapping variables
         self.receptive_field_map_checkbutton = tk.IntVar()
         self.receptive_field_map_type = tk.IntVar()
         self.dots = tk.IntVar()
@@ -128,9 +128,7 @@ class Gui:
         # Textbox for logging
         self.text_data = 0
         self.text = self.draw_scrolled_text()
-        # XXX: If using Anaconda or Python 3.0, calls to GUI from another thread ends up in a loop
-        # to over come this use message queue or list to read and display the logs into UI
-        # Or read the parameters in the periodic call
+  
         globls.dump_log = self.log_to_textbox
         # Draw canvas
         self.last_mouse_target_point = [0, 0]
@@ -199,9 +197,9 @@ class Gui:
         '''
             Eye recording method selection processing
         '''
-        # Open new window and add the selection of eye link or eye tracker
+        # Open new window and add the selection of eyelink or eye tracker
         # And as well channel selector (radio button)
-        # Once the radio button is selected show the option on Eye control Configuration options window
+        # Once the radio button is selected show the option on Eye Control Configuration options window
         # So that the user can see it.
 
         globls.eye_recording_method_obj = EyeRecord()
@@ -223,9 +221,9 @@ class Gui:
             self.draw_eye_and_window_config()
             # Draw eye calibration widgets
             self.draw_eye_calibration_task_button()
-            # Do this in the end as it initilizes some of the widgets as well
+            # Do this in the end as it initializes some of the widgets as well
             self.init_calibration_configuration_parameter(init=True)
-            # receptve field mapping
+            # Receptive field mapping
             self.draw_receptive_field_mapping_window()
             tracking_config_dict = GuiWidget['eye_window_config']['eye_window_label']
 
@@ -235,10 +233,6 @@ class Gui:
 
         # Redraw the selected option on the eye configuration label header
         WidgetApi.draw_label(globls.gui_root, tracking_config_dict)
-
-        # TO DO. if the eye recording needs to be edited or view the channel details.
-        # if eye_mov_cap_method == EyeRecordingMethods.EYE_COIL:
-        #     obj.bind("<Button-1>", self.eye_recording_method_obj.display_channel_for_eye_pos)
 
         # Periodic call to display window, vergence
         self.gui_periodic_call()
@@ -253,7 +247,7 @@ class Gui:
                                         GuiWidget['eye_display']['canvas']['relwidth'], GuiWidget['eye_display']['canvas']['relheight'])
         globls.update_gui_scale_factor()
 
-    ''' Task rediness is checked before executing the task '''
+    ''' Task readiness is checked before executing the task '''
     def check_task_readiness(self, task=None, load_file=None):
         if (task and self.task_in_progress):
             self.display_warning_error_message("Error, Stop Current Experiment ",
@@ -266,7 +260,7 @@ class Gui:
             return False
         return True
 
-    ''' On 3rd party server connecting to the GUI it displays message '''
+    ''' On 3rd party server connecting to the GUI, it displays message '''
     def display_warning_error_message(self,window_title,window_text):
 
         # Generate an error window with an okay button
@@ -289,7 +283,7 @@ class Gui:
         return
 
 
-    ''' Update if the both subject and task file are read '''
+    ''' Update if both subject and task file are read '''
     def update_task_subject_file_loaded(self, subject_file=None, task_file=None):
         if subject_file is not None:
             self.subject_file_loaded = subject_file
@@ -297,7 +291,7 @@ class Gui:
         if task_file is not None:
             self.task_file_loaded = task_file
 
-        # If both files loaded then set the flag and enable control button
+        # If both files are loaded, then set the flag and enable control button
         if self.task_file_loaded and self.subject_file_loaded:
             globls.load_subject_task_config_flag = False
             if not self.task_in_progress:
@@ -312,9 +306,9 @@ class Gui:
 
     ''' Process the experiment based on selection '''
     def process_task(self):
-        # based on Task enable or disable the entrire widget
+        # Based on task, enable or disable the entire widget
 
-        # Do not allow switchig task without Stopping the experiment if already started
+        # Do not allow switching task without stopping the experiment if already started
         task = self.task_checkbutton.get()
 
         if not self.check_task_readiness(True, True):
@@ -379,7 +373,7 @@ class Gui:
             return
         globls.gui_root.after(const.GUI_PERIODIC_CALL, self.gui_periodic_call)
 
-    ''' Read the parameters from GUI like  offset gain '''
+    ''' Read the parameters from GUI like offset gain '''
     def read_eye_window_configuration(self):
         try:
             # Depth
@@ -414,7 +408,7 @@ class Gui:
         except Exception as e:
             log.exception(e)
 
-    ''' Draw and display eye information from eye link '''
+    ''' Draw and display eye information from eyelink '''
     @staticmethod
     def get_line_pos(x, y, cross_line=False):
         # :param x: x position
@@ -433,14 +427,14 @@ class Gui:
             tempx = globls.drawing_object_pos[i][0]
             tempy = globls.drawing_object_pos[i][1]
 
-            # tempR = str(hex(globls.drawing_obejct_color[i][0]))
-            # tempG = str(hex(globls.drawing_obejct_color[i][1]))
-            # tempB = str(hex(globls.drawing_obejct_color[i][2]))
+            # tempR = str(hex(globls.drawing_object_color[i][0]))
+            # tempG = str(hex(globls.drawing_object_color[i][1]))
+            # tempB = str(hex(globls.drawing_object_color[i][2]))
             # tempColor = '#' + tempR.replace('0x','') + tempG.replace('0x','') + tempB.replace('0x','')
 
-            # self.eye_canvas_object.itemconfig(self.draw_obejct[i][const.X], fill = tempColor)
+            # self.eye_canvas_object.itemconfig(self.draw_object[i][const.X], fill = tempColor)
             self.eye_canvas_obj.coords(self.draw_object[i][const.X], tempx - self.lineLength / 2, tempy, tempx + self.lineLength / 2, tempy)
-            # self.eye_canvas_object.itemconfig(self.draw_obejct[i][const.Y], fill = tempColor)
+            # self.eye_canvas_object.itemconfig(self.draw_object[i][const.Y], fill = tempColor)
             self.eye_canvas_obj.coords(self.draw_object[i][const.Y], tempx, tempy - self.lineLength / 2, tempx, tempy + self.lineLength / 2)	
 
     def display_eye(self):
@@ -451,7 +445,7 @@ class Gui:
             if len(globls.eye_data[0]):
                 eye_pos_non_scaled = copy.copy(globls.eye_data)
 
-                # Convert the eye data to pixel and co-ordinate system where (0, 0)
+                # Convert the eye data to pixel and coordinate system where (0,0)
                 # starts at top left
                 left_x, left_y = util.convert_mm_to_pix(eye_pos_non_scaled[const.LEFT][0],
                                                         eye_pos_non_scaled[const.LEFT][1])
@@ -486,7 +480,7 @@ class Gui:
                 elif right_y > globls.arbitrator_window_height:
                     right_y = globls.arbitrator_window_height
 
-                # resize it fit into GUI canvas
+                # Resize to fit into GUI canvas
                 left_x_resized = left_x / globls.arbitrator_display['x_scale_factor']
                 left_y_resized = left_y / globls.arbitrator_display['y_scale_factor']
                 right_x_resized = right_x / globls.arbitrator_display['x_scale_factor']
@@ -506,7 +500,7 @@ class Gui:
 
                     if (self.eye_widget[const.LEFT][const.X] is None or
                         self.eye_widget[const.LEFT][const.Y] is None):
-                        # get line co-ordinates which would look like '+'
+                        # Get line coordinates which would look like '+'
                         posx, posy = self.get_line_pos(left_x_resized * self.zoom_by - globls.arbitrator_window_width/globls.arbitrator_display['x_scale_factor']/2 * (self.zoom_by - 1),
                                                        left_y_resized * self.zoom_by - globls.arbitrator_window_height/globls.arbitrator_display['y_scale_factor']/2 * (self.zoom_by - 1))
                         #posx, posy = self.get_line_pos(left_x_resized * self.zoom_by + (globls.eye_canvas_width - globls.eye_canvas_width*self.zoom_by)/2,
@@ -533,7 +527,7 @@ class Gui:
                     self.eye_widget[const.LEFT][const.Y] = None
 
                 if globls.eye_selected['right']:
-                    # this is required to be done as move will move the eye window out of
+                    # This is required to be done as 'move' will move the eye window out of
                     # the canvas
                     if self.zoom_by:
                         self.eye_canvas_obj.delete(self.eye_widget[const.RIGHT][const.X])
@@ -573,7 +567,7 @@ class Gui:
     ''' Display windows like version, target '''
     def display_windows(self):
         '''
-            updated: This flag will be set to True if on demand window is required to be draw
+            Updated: This flag will be set to True if on demand window is required to be drawn
         '''
         try:
 
@@ -582,7 +576,7 @@ class Gui:
             if globls.centre_window_on:
 
                 diff = {tuple(i) for i in self.last_drawn_centre_point} ^ {tuple(i) for i in centre_pt}
-                # if there is change in window from previos one then draw the window else do not
+                # If there is change in window from previos one, then draw the window, else do not
                 if len(diff):
                     # Delete it
                     for pt_win in self.centre_pt_window_widget:
@@ -595,7 +589,7 @@ class Gui:
                         if pt_win[3]: self.eye_canvas_obj.delete(pt_win[3])
                     self.centre_pt_window_widget = []
 
-                    # based on the target points available
+                    # Based on the target points available
                     for tp in centre_pt:
                         left_pt = left_win = right_pt = right_win = None
                         # Get offset and disparity applied points
@@ -610,7 +604,7 @@ class Gui:
                         rx, ry = util.convert_mm_to_pix(rx, ry)
                         right_x, right_y = util.shift_to_top_left(rx, ry)
 
-                        # convert the 3rd parameter diameter from degreee to pix
+                        # Convert the 3rd parameter diameter from degree to pix
                         diameter, tmp = util.convert_deg_to_pix(tp[3])
                         lcolor = 'green'
                         if len(tp) > 4:
@@ -658,7 +652,7 @@ class Gui:
                 verg_pos_x, verg_pos_y = util.convert_mm_to_pix(verg_pos_x, verg_pos_y)
                 verg_pos_x, verg_pos_y = util.shift_to_top_left(verg_pos_x, verg_pos_y)
 
-                # Resize to fit to UI co-ordinates
+                # Resize to fit to UI coordinates
                 verg_pos_x_resized = verg_pos_x / globls.arbitrator_display['x_scale_factor']
                 verg_pos_y_resized = verg_pos_y / globls.arbitrator_display['y_scale_factor']
 
@@ -738,7 +732,7 @@ class Gui:
         # Spinboxes
         eye_win_widget['h_left_offset']['textvariable'] = self.h_left_offset
         self.left_sb.append(WidgetApi.draw_spin_box(eye_win_config, eye_win_widget['h_left_offset']))
-        # Horizontal Left gain spinbox
+        # Horizontal Left Gain spinbox
         eye_win_widget['h_left_gain']['textvariable'] = self.h_left_gain
         self.left_sb.append(WidgetApi.draw_spin_box(eye_win_config, eye_win_widget['h_left_gain']))
         # Horizontal Right Offset spinbox
@@ -747,16 +741,16 @@ class Gui:
         # Horizontal Right Gain spinbox
         eye_win_widget['h_right_gain']['textvariable'] = self.h_right_gain
         self.right_sb.append(WidgetApi.draw_spin_box(eye_win_config, eye_win_widget['h_right_gain']))
-        # vertical Left offset spinbox
+        # Vertical Left Offset spinbox
         eye_win_widget['v_left_offset']['textvariable'] = self.v_left_offset
         self.left_sb.append(WidgetApi.draw_spin_box(eye_win_config, eye_win_widget['v_left_offset']))
-        # vertical Left gain spinbox
+        # Vertical Left Gain spinbox
         eye_win_widget['v_left_gain']['textvariable'] = self.v_left_gain
         self.left_sb.append(WidgetApi.draw_spin_box(eye_win_config, eye_win_widget['v_left_gain']))
-        # vertical Right offset spinbox
+        # Vertical Right Offset spinbox
         eye_win_widget['v_right_offset']['textvariable'] = self.v_right_offset
         self.right_sb.append(WidgetApi.draw_spin_box(eye_win_config, eye_win_widget['v_right_offset']))
-        # vertical Right gain spinbox
+        # Vertical Right Gain spinbox
         eye_win_widget['v_right_gain']['textvariable'] = self.v_right_gain
         self.right_sb.append(WidgetApi.draw_spin_box(eye_win_config, eye_win_widget['v_right_gain']))
 
@@ -783,13 +777,13 @@ class Gui:
         # Spinboxes
         tracker_win_widget['h_offset']['textvariable'] = self.h_left_offset
         self.left_sb.append(WidgetApi.draw_spin_box(tracker_win_config, tracker_win_widget['h_offset']))
-        # Horizontal Left gain spinbox
+        # Horizontal Left Gain spinbox
         tracker_win_widget['h_gain']['textvariable'] = self.h_left_gain
         self.left_sb.append(WidgetApi.draw_spin_box(tracker_win_config, tracker_win_widget['h_gain']))
-        # vertical Left offset spinbox
+        # Vertical Left Offset spinbox
         tracker_win_widget['v_offset']['textvariable'] = self.v_left_offset
         self.left_sb.append(WidgetApi.draw_spin_box(tracker_win_config, tracker_win_widget['v_offset']))
-        # vertical Left gain spinbox
+        # Vertical Left Gain spinbox
         tracker_win_widget['v_gain']['textvariable'] = self.v_left_gain
         self.left_sb.append(WidgetApi.draw_spin_box(tracker_win_config, tracker_win_widget['v_gain']))
 
@@ -798,7 +792,7 @@ class Gui:
 
     def update_default_eye_configuration(self, init=False):
         '''
-        Update the eye configuration during initilization and when a subject specific configuration is loaded
+        Update the eye configuration during initialization and when a subject specific configuration is loaded
         :param init:
         :return:
         '''
@@ -915,7 +909,7 @@ class Gui:
 
         self.initilize_auto_calibration_points()
 
-        # On, Off, clear, cancel
+        # On, Off, Clear, Cancel
 
         #eye_calib_widgets['submit_button']['command'] = lambda e=self.auto_calib_entries: self.calib_config_submit_data(e)
         # self.calib_config_submit = WidgetApi.draw_button(calib_frame,
@@ -1008,7 +1002,7 @@ class Gui:
                                        "Please click on 'Stop' to proceed\nwith this action")
                 self.calibration_type.set(self.calibration_type_prev)
             else:
-                '''Dont currently allow auto calibration'''
+                '''Do not currently allow auto calibration'''
                 #self.auto_checkbutton.configure(state=tk.DISABLED)
                 self.manual_checkbutton.configure(state=tk.NORMAL)
         self.calibration_type_prev = self.calibration_type.get()
@@ -1034,7 +1028,7 @@ class Gui:
         self.clear_button.configure(state=button_state)
 
         self.manual_checkbutton.configure(state=checkbutton_state)
-        '''Dont currently allow auto calibration'''
+        '''Do not currently allow auto calibration'''
         #self.auto_checkbutton.configure(state=tk.DISABLED)
         #self.calibration_type.set(0)
 
@@ -1063,7 +1057,7 @@ class Gui:
 
             # Get the Target points
             if self.auto_calibration_points.shape[0] > 0:
-                # clear all the points
+                # Clear all the points
                 for pt_win in self.centre_pt_window_widget:
                     # Left window widget
                     if pt_win[0]: self.eye_canvas_obj.delete(pt_win[0])
@@ -1084,7 +1078,7 @@ class Gui:
 
     def initilize_auto_calibration_points(self):
         '''
-        centre Points to be displayed for calibriation
+        Center points to be displayed for calibration
         :return:
         '''
         try:
@@ -1112,7 +1106,7 @@ class Gui:
 
     def select_center_xy_position(self):
         '''
-        Get the next centre point to be dispayed for calibration
+        Get the next center point to be displayed for calibration
         :param accepted:
         :return:
         '''
@@ -1120,10 +1114,10 @@ class Gui:
         y = 0
         z = 0
         if self.calibration_type.get() == Calibration.AUTO:
-            # If value is accepted increment the index here
+            # If value is accepted, increment the index here
             self.auto_calib_cur_index += 1
 
-            # see if all points are calibrated
+            # See if all points are calibrated
             if self.auto_calib_cur_index >= self.auto_calibration_points.shape[0]:
                 self.auto_calib_cur_index = 0
                 self.procces_calibrate()
@@ -1157,7 +1151,7 @@ class Gui:
 
     def accept_measured_eyepos(self):
         '''
-            process accept calibration button
+            Process accept calibration button
         '''
         # Accept the measured eye position
         left_mean, right_mean = calib.process_accept_measured_eye_pos()
@@ -1168,10 +1162,10 @@ class Gui:
         util.send_data(globls.arbitrator_sock, globls.arbitrator_sock_addr, data,
                        'Accept ')
 
-        # Get the next (X, Y) centre points if all the ppoints are exhausted then stop the experiment
+        # Get the next (X, Y) center points. If all the points are exhausted, then stop the experiment
         if self.calibration_type.get() == Calibration.AUTO:
             resp = self.select_center_xy_position()
-            # In auto calibration if all the points are displayed then stop
+            # In auto calibration, if all the points are displayed, then stop
             if not resp:
                 self.stop()
                 return
@@ -1209,12 +1203,12 @@ class Gui:
 
         self.init_calibration_configuration_parameter(init=True)
 
-        # update to centre point and wait for the periodic call to draw
+        # Update to center point and wait for the periodic call to draw
         globls.update_centre_point(0, [])
 
     def process_cancel_last_accepted_data(self):
         '''
-        process cancal last acceptd calbration point button
+        Process cancel last accepted calibration point button
         :return:
         '''
         if calib.get_length_of_accepted_moving_eye_position() == 0:
@@ -1229,7 +1223,7 @@ class Gui:
         # Reset the calibration parameters
         calib.cancel_last_accepted_data()
 
-        # delete the widget and redraw
+        # Delete the widget and redraw
         if self.calibration_type == Calibration.AUTO:
             if self.auto_calib_cur_index > 0:
                 self.auto_calib_cur_index -= 1
@@ -1245,18 +1239,18 @@ class Gui:
 
     def draw_accepted_measured_eye_pos_data(self, left_mean, right_mean):
         '''
-        Draw the accepted measred eye postion on the GUI
+        Draw the accepted measured eye position on the GUI
         :param left_mean:
         :param right_mean:
         :return:
         '''
-        # Convert it to pix and co-ordinate 0,0 starting on top left
+        # Convert it to pix and coordinate (0,0) starting on top left
         lx, ly = util.convert_mm_to_pix(left_mean[const.X],
                                                 left_mean[const.Y])
         left_x, left_y = util.shift_to_top_left(lx, ly)
 
 
-        # Convert it to pix and co-ordinate 0,0 starting on top left
+        # Convert it to pix and coordinate (0,0) starting on top left
         rx, ry = util.convert_mm_to_pix(right_mean[const.X],
                                                 right_mean[const.Y])
         right_x, right_y = util.shift_to_top_left(rx, ry)
@@ -1264,7 +1258,7 @@ class Gui:
         left_pt_widget = self.draw_point(left_x, left_y, color='green')
         right_pt_widget = self.draw_point(right_x, right_y, color='blue')
 
-        # update the widget value
+        # Update the widget value
         self.accepted_eyepos_ploted_widget.append([left_pt_widget, right_pt_widget])
 
     @staticmethod
@@ -1377,7 +1371,7 @@ class Gui:
         self.receptive_field_map_type.set(0)
 
     def process_receptive_field_mapping_flag(self, entries=None):
-        # process the receptive field mapping check boxes
+        # Process the receptive field mapping checkboxes
         if self.receptive_field_map_type.get() == FieldMapping.DOTS:
             self.receptive_field_grating_checkbutton.configure(state=tk.DISABLED)
             self.receptive_field_bar_checkbutton.configure(state=tk.DISABLED)
@@ -1393,7 +1387,7 @@ class Gui:
             self.receptive_field_bar_checkbutton.configure(state=tk.NORMAL)
 
     def process_receptive_field_mapping(self):
-        #Submit and  read data
+        #Submit and read data
         #param entries:
         #return:
 
@@ -1441,10 +1435,10 @@ class Gui:
         except ValueError:
             return False, msg, val
 
-    ''' control button processing '''
+    ''' Control button processing '''
     def draw_control_buttons(self):
         '''
-        Draw frame and widgets for start, stop, pause and exit
+        Draw frame and widgets for start, stop, pause, and exit
         :return:
         '''
         task_control_widget = GuiWidget['task_controls']
@@ -1543,14 +1537,14 @@ class Gui:
             util.send_data(globls.arbitrator_sock, globls.arbitrator_sock_addr, data,
                            'Send Start Command')
 
-            #  After un pausing collect data from here. hence enable flag
+            #  After un-pausing, collect data from here. hence enable flag
             if self.task_in_progress:
                 DataFileObj.update_data_collect_flag(True)
 
             # Create the data file to write the data.
-            # On stop write the entire data to file and reset the file for next
-            # start
-            # between pause and start this file would not be overwritten but
+            # On stop, write the entire data to file and reset the file for next
+            # start.
+            # Between pause and start, this file would not be overwritten but
             # data would be written as the experiments are unpaused
             if not DataFileObj.is_data_file_created():
                 # Create the file
@@ -1572,7 +1566,7 @@ class Gui:
 
         except Exception as e:
             log.exception(e)
-            self.log_to_textbox('Exception sending Start data to matlab', MessageType.ERROR)
+            self.log_to_textbox('Exception sending Start data to MATLAB', MessageType.ERROR)
             return
 
         
@@ -1597,7 +1591,7 @@ class Gui:
     def stop(self, task_just_started=False):
         # Stop the task
 
-        """ When you click to Stop, this Ensure to ask if task and subject config should be saved """
+        """ When you click to Stop, this ensures to ask if task and subject config should be saved """
         if not task_just_started:
             if tkMessageBox.askyesno("End Session?",
                                      "Do you want to save the Task or Subject configuration files? Click 'Yes' to return to the GUI to save them, or 'No' to end the session"):
@@ -1613,7 +1607,7 @@ class Gui:
         util.send_data(globls.arbitrator_sock, globls.arbitrator_sock_addr, data,
                        'Send Stop command')
 
-        # Disable the buttons but keep the checkbuttons normal in case some one wants to run it again
+        # Disable the buttons but keep the checkbuttons normal in case someone wants to run it again
         self.update_calibration_widgets(checkbutton_state=tk.DISABLED)
         self.update_receptive_field_mapping_widget(state=tk.DISABLED)
         self.init_calibration_configuration_parameter()
@@ -1648,7 +1642,7 @@ class Gui:
                                  "Do you want to save the Task or Subject configuration files? Click 'Yes' to return to the GUI to save them, or 'No' to close the GUI"):
             return
 
-        # send stop signal to collect data
+        # Send stop signal to collect data
         DataFileObj.dump_data_to_file()
         DataFileObj.total_data_dumped_to_file()
         DataFileObj.reset_file_name()
@@ -1657,8 +1651,8 @@ class Gui:
         util.send_data(globls.arbitrator_sock, globls.arbitrator_sock_addr,
                        data, 'Exit command')
         globls.dump_log('Closing all socket and threads')
-        # Send this message to self socket to wakeup the socket which is waiting on the
-        # arbitrator server and close. Making exit a smooth
+        # Send this message to self socket to wake up the socket which is waiting on the
+        # arbitrator server and close. Making a smooth exit.
         util.send_data(globls.arbitrator_sock,
                        ('127.0.0.1', globls.config_param['arbitrator_service']['local_port']),
                        data, 'Exit command to self')
@@ -1669,7 +1663,7 @@ class Gui:
     ''' Scrolled text '''
     def draw_scrolled_text(self):
         '''
-        Draw frames and wigets for scrolled text
+        Draw frames and widgets for scrolled text
         :return:
         '''
         scrolled_widgets = GuiWidget['scrolled_text']
@@ -1721,7 +1715,7 @@ class Gui:
         # Draw canvas
         canvas = WidgetApi.draw_canvas(canvas_frame, display_widget['canvas'])
 
-        # Left Button pressed down
+        # Left button pressed down
         canvas.bind("<Button-1>", self.mouse_button_pressed)
         # Left button moved while pressed down
         canvas.bind("<B1-Motion>", self.canvas_mouse_position)
@@ -1745,7 +1739,7 @@ class Gui:
             check_button['command'] = self.process_canvas_mouse_checkbutton
             WidgetApi.draw_check_button(canvas_frame, check_button)
 
-        # Update GUI screen parameter to calulcate the scale factor
+        # Update GUI screen parameter to calculate the scale factor
         globls.update_gui_display_param(width, height,
                                         display_widget['main_frame']['relwidth'], display_widget['main_frame']['relheight'],
                                         display_widget['canvas']['relwidth'], display_widget['canvas']['relheight'])
@@ -1770,10 +1764,10 @@ class Gui:
             data = '{} 1/'.format(const.TARGET_ON)
             util.send_data(globls.arbitrator_sock, globls.arbitrator_sock_addr, data, 'Sent Target On')
 
-            # Send the Mouse co-ordinate
+            # Send the Mouse coordinate
             self.canvas_mouse_position(mouse_click_event)
         elif self.canvas_mouse_checkbutton.get() == MouseClick.FEEDBACK:
-            # Send the Mouse co-ordinate
+            # Send the Mouse coordinate
             self.canvas_mouse_position(mouse_click_event)
         else:
             self.display_warning_error_message("Warning, Feedback or Dragging Not Selected",
@@ -1794,7 +1788,7 @@ class Gui:
             self.clear_window_on_canvas(self.mouse_click_target_points)
             self.mouse_click_target_points = None
 
-    # Get canvas co-ordinates for both dragging and feedback checkbox
+    # Get canvas coordinates for both dragging and feedback checkbox
     def canvas_mouse_position(self, mouse_click_event):
         if self.canvas_mouse_checkbutton.get() == 0:
             return
@@ -1805,7 +1799,7 @@ class Gui:
         # #print t2 - self.t1
         # self.t1 = t2
 
-        # send mouse co-ordinates
+        # send mouse coordinates
         x_scaled = mouse_click_event.x * globls.arbitrator_display['x_scale_factor']
         y_scaled = mouse_click_event.y * globls.arbitrator_display['y_scale_factor']
 
@@ -1832,7 +1826,7 @@ class Gui:
             '''
             for entries in self.editable_configuration_entries:
 
-                # If any of the entries are empty skip processing
+                # If any of the entries are empty, skip processing
                 if not len(entries[0].get()) or not len(entries[1].get()) or not len(entries[2].get()):
                     continue
 
@@ -1855,19 +1849,17 @@ class Gui:
                                           const.TARGET_Z, globls.depth)
         util.send_data(globls.arbitrator_sock, globls.arbitrator_sock_addr, data)
 
-        # TO DO: What needs to be done for dragging case, should it be drawn immideately or
-        # when matlab responds back
         if self.canvas_mouse_checkbutton.get() == MouseClick.DRAGGING:
             diff_xy_pos = np.subtract([x_scaled, y_scaled], self.last_mouse_target_point).tolist()
             if not self.mouse_click_target_points:
-                # Draw the target current target on canvas
+                # Draw the current target on canvas
                 self.mouse_click_target_points = self.draw_point(x_scaled, y_scaled, win_size=8)
             else:
                 self.move_point(self.mouse_click_target_points,
                                 diff_xy_pos[0], diff_xy_pos[1])
             self.last_mouse_target_point = [x_scaled, y_scaled]
 
-    # On zoom enlarge the size
+    # On zoom, enlarge the size
     def display_zoom(self, zoom_out):
         # :param increase: should it be increased or decreased
         increase_factor = 0.1
@@ -1883,7 +1875,7 @@ class Gui:
     def draw_point(self, x, y, color='black', win_size=3):
         '''
         :param x: X position
-        :param y: y position
+        :param y: Y position
         :param color: color
         :param win_size: size
         :return:
@@ -1901,7 +1893,7 @@ class Gui:
 
     def move_point(self, widget, x, y):
         '''
-        Function to move a  point on screen
+        Function to move a point on screen
         :param x:
         :param y:
         '''
@@ -1975,14 +1967,14 @@ class Gui:
 
     def submit_configuration_data(self):
         '''
-        Send the condiguration from GUI to 3rd party server
+        Send the configuration from GUI to 3rd party server
         '''
         try:
             data_to_send = ''
             data_to_send_flag = False
             for entries in self.editable_configuration_entries:
 
-                # If any of the entries are empty skip processing
+                # If any of the entries are empty, skip processing
                 if not len(entries[0].get()) or not len(entries[1].get()) or not len(entries[2].get()):
                     continue
                 data_to_send_flag = True
@@ -1997,7 +1989,7 @@ class Gui:
 
                 data_to_send += '{} {}/'.format(command_word, data_word)
 
-                # If the total length exceeds specified limit just send the partial set
+                # If the total length exceeds the specified limit, just send the partial set
                 if len(data_to_send) > (globls.constant['data_size_length'] - 24):
                     util.send_data(globls.arbitrator_sock, globls.arbitrator_sock_addr,
                                    data_to_send, "Configuration")
@@ -2018,7 +2010,7 @@ class Gui:
           [Label 2, command_word 2, command_type 2],
           ....
           ]
-          if length of configuration is 0 then it means we are just resetting the entry box
+          if the length of configuration is 0, then the entry box is resetting
         '''
         try:
             i = 0
@@ -2033,7 +2025,7 @@ class Gui:
                     lst[2].insert(0, configuration[i][2])
                 i += 1
 
-            # send the data only if the configuration is present else do nothing
+            # Send the data only if the configuration is present, else do nothing
             if len(configuration):
                 self.submit_configuration_data()
 
@@ -2050,7 +2042,7 @@ class Gui:
     ''' Config for displaying the configuration '''
     def draw_displayable_configuration_widgets(self):
         '''
-        Draw the widets like entry boxes for display and edit the configuration
+        Draw the widgets like entry boxes for display and edit the configuration
         :return:
         '''
         configuration_widget = GuiWidget['displayable_configuration']
@@ -2091,7 +2083,7 @@ class Gui:
             ent2.bind('<Tab>', self.update_displayable_configuration_dict)
             self.displayable_widget_config[ent2]['data_word'].set(0)
 
-    # On entering the command word on displayable window and pressing enter or tab this function would be
+    # On entering the command word on displayable window and pressing enter or tab, this function would be
     # called to update the internal data structure to read the configuration from the 3rd party server
     # and update on the UI
     def update_displayable_configuration_dict(self, event=None):
@@ -2124,7 +2116,7 @@ class Gui:
 
     def update_displayable_configuration(self):
         '''
-        This function updates the configuration from the 3rd partyserver
+        This function updates the configuration from the 3rd party server
         [
         [command_type 1, command_word 1],
         [command_type 2, command_word 2],
@@ -2135,8 +2127,7 @@ class Gui:
         try:
             for k, v in configuration.iteritems():
                 display_config = self.displayable_configuration_dict.get(int(k), None)
-                # if the configuratio is defined
-                # TO DO check why you need the second check
+                # If the configuration is defined
                 if display_config is not None and len(display_config['command_word'].get()):
                     display_config['data_word_label'].set(v)
         except Exception as e:
@@ -2144,13 +2135,13 @@ class Gui:
 
     def set_displayable_config(self, configuration):
         '''
-            This function updates the configuration from the 3rd partyserver
+            This function updates the configuration from the 3rd party server
             [
             [label, command_type 1, command_word 1],
             [label, command_type 2, command_word 2],
             ....
             ]
-            if length of configuration is 0 then it means we are just resetting the entry box
+            if length of configuration is 0, then the entry box is resetting
         '''
         try:
             i = 0
@@ -2181,7 +2172,7 @@ class Gui:
     ''' Configuration for loading the subject file '''
     def draw_loadsave_subject(self):
         '''
-        draw frame to load and save subject specific configuraiton file
+        draw frame to load and save subject specific configuration file
         :return:
         '''
         load_config_widget = GuiWidget['load_subject_config']
@@ -2208,7 +2199,7 @@ class Gui:
         ''' Configuration for loading subject viewing parameters '''
     def draw_subject_viewing_params(self):
         '''
-        draw frame to load and save subject specific configuraiton file
+        draw frame to load and save subject specific configuration file
         :return:
         '''
         subj_viewing_widget = GuiWidget['subject_viewing_widget']
@@ -2233,9 +2224,9 @@ class Gui:
 
             self.subject_viewing_entries.append((entry_dict['field'], ent, entry_dict))
 
-    # Write to file. Writing to file depends on what is selected on UI
-    # if no file is selected in "Load config from subject" then the values are written to default
-    # file else it is written into the subject specific file
+    # Write to file. Writing to file depends on what is selected on UI.
+    # If no file is selected in "Load config from subject," then the values are written to default
+    # file, else it is written into the subject specific file
     def save_subject_configuration(self):
         '''
         save configuration from subject file
@@ -2282,7 +2273,7 @@ class Gui:
         util.send_screen_parameters()
 
 '''
-    Information about the GUI main screen widget like location, width and height
+    Information about the GUI main screen widget like location, width, and height
 '''
 GuiWidget = {
     'eye_display': {

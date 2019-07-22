@@ -1,7 +1,7 @@
 '''
 Eye recording method
 Choose what eye recording method to use.
-If eye coil: chose channels and the associated eye to channel data
+If eye coil: choose channels and the associated eye to channel data
 '''
 import Tkinter as tk
 import utility as util
@@ -11,7 +11,7 @@ from global_parameters import Globals as globls
 
 
 class EyeRecordFrame:
-    # Eye movement method. Select the method, eye coil and eye position
+    # Eye movement method. Select the method, eye coil, and eye position
     # frame position information
     SELCTION_RELX = 0.01
     SELCTION_RELY = 0.02
@@ -66,7 +66,7 @@ class EyeRecord:
         self.buttonOK.bind('<Return>', lambda event, key='<space>': widget.event_generate(key))
         self.dialog1.protocol("WM_DELETE_WINDOW", self.dialog1.destroy)
 
-        # New window for capturing the eye window (parent windoe for new window
+        # New window for capturing the eye window (parent window for new window)
         self.eye_recording_win = tk.Toplevel(globls.gui_root)
 
 
@@ -81,7 +81,7 @@ class EyeRecord:
 
         self.eye_recording_win.wm_title("Eye Method Selection")
 
-        # Recording method which is eye coil or link
+        # Recording method (eye coil or eyelink)
         self.eye_recording_method = tk.IntVar()
         # Draw dropdown box or option menu
         self.eye_pos_option_menu_object = []
@@ -89,9 +89,9 @@ class EyeRecord:
         for i in range(EyeXYZIndex.TWAIN_XYZ_INDEX):
             self.eye_pos_option_menu_list.append(tk.StringVar())
 
-        # Channel list and objet
+        # Channel list and object
         self.eye_coil_channel = []  # To get the eye channel value 0 or 1
-        self.eye_coil_channel_obj = []  # to get the eye coil check button object
+        self.eye_coil_channel_obj = []  # To get the eye coil check button object
         for i in range(EyeCoilChannelId.C16 + 1):
             self.eye_coil_channel.append(tk.IntVar())
 
@@ -116,11 +116,11 @@ class EyeRecord:
         Save the selected information
         :return:
         '''
-        # Store the channels used for x, y and z
+        # Store the channels used for x, y, and z
         if int(self.eye_recording_method.get()) == 1:
             eye_pos = self.get_eye_positions_channel()
 
-            # store the channels list
+            # Store the channels list
             channel_list_selected = []
             for i in range(EyeCoilChannelId.C16 + 1):
                 if self.eye_coil_channel[i].get():
@@ -131,7 +131,7 @@ class EyeRecord:
 
     def draw_eye_recording_method_selection(self):
         '''
-        Draw frame and widgets for selectin the method for eye recording
+        Draw frame and widgets for selecting the method for eye recording
         :return:
         '''
         recording_method_select_widget = EyeRecordWidget['recording_method_selection']
@@ -155,7 +155,7 @@ class EyeRecord:
         '''
         if int(self.eye_recording_method.get()) == 1:
 
-            # # Keep the child window selected
+            # Keep the child window selected
             # self.eye_recording_win.lift(aboveThis=self.parent)
             for i in range(EyeCoilChannelId.C16 + 1):
                 self.eye_coil_channel_obj[i].configure(state=tk.NORMAL)
@@ -172,7 +172,7 @@ class EyeRecord:
             for i in range(EyeXYZIndex.TWAIN_XYZ_INDEX):
                 self.eye_pos_option_menu_object[i].configure(state=tk.DISABLED)
 
-            recording_method_name = 'Eye Link'
+            recording_method_name = 'Eyelink'
         else:
             # No eye tracking
             recording_method_name = 'No Eyes'
@@ -197,7 +197,7 @@ class EyeRecord:
             status = globls.analaog_input_output['eye_coil_channels']
             channel_lst = util.convert_int_to_bitlist(status)
 
-            # initialze eye coil channel
+            # Initialize eye coil channel
             for i in range(EyeCoilChannelId.C16 + 1):
                 if i in channel_lst:
                     self.eye_coil_channel[i].set(1)
@@ -241,9 +241,9 @@ class EyeRecord:
                 self.eye_pos_option_menu_object[i].configure(state=tk.DISABLED)
 
     def _reset_option_menu(self, om_obj, om_variable, options, index=None):
-        '''reset the values in the option menu
+        '''Reset the values in the option menu
 
-        if index is given, set the value of the menu to
+        If index is given, set the value of the menu to
         the option at the given index
         '''
         menu = om_obj["menu"]
@@ -320,7 +320,7 @@ EyeRecordWidget = {
             'relx': (EyeRecordFrame.SELCTION_RELX), 'rely': (EyeRecordFrame.SELCTION_RELY - 0.01),
             'relheight': 0.05, 'relwidth': 0.27},
         'radiobuttons': [
-            {'text': ' Eye Link', 'value': EyeRecordingMethods.EYE_LINK,
+            {'text': ' Eyelink', 'value': EyeRecordingMethods.EYE_LINK,
             'relheight': 0.30, 'relwidth': 0.30,
              'relx': 0.20, 'rely': 0.35},
             {'text': ' Eye Coil', 'value': EyeRecordingMethods.EYE_COIL,

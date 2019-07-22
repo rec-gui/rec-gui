@@ -15,7 +15,7 @@ total_task_end = 0
 total_task_rec = 0
 for dc in complete_data:
     # print "Config \n", dc['config'], '\n'
-    # For each run what is the total records saved
+    # For each run, what is the total records saved?
     total += len(dc['data'])
     print "\ntotal record", total, "in task ", complete_data.index(dc)
     print "-----------------"

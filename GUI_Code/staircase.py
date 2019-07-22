@@ -1,5 +1,5 @@
 '''
-Stair case (SC) procedure
+Staircase (SC) procedure
 '''
 
 import random
@@ -36,17 +36,17 @@ class ResponseDataType:
 
 class StairCase:
     def __init__(self):
-        self.variance_lst = {} # Need variance for 0, 20, 40 seprately
+        self.variance_lst = {} # Need variance for 0, 20, 40 separately
 
         self.get_variances_for_reference_slant()
 
-        # generate all posible combination of stimulus condition
+        # Generate all possible combinations of stimulus condition
         self.stim_conditions = list(itertools.product(matlab_config['reference_slant'],
                                                     matlab_config['binocular_cue'],
                                                     matlab_config['monocular_cue'],
                                                     matlab_config['start_position']))
 
-        # Generate the list of indexes for the stimus
+        # Generate the list of indexes for the stimulus
         self.stim_condition_indices = random.sample(xrange(len(self.stim_conditions)),
                                                            len(self.stim_conditions))
 
@@ -96,16 +96,16 @@ class StairCase:
 
         # Get the last variance in the list
         var_idx = len(self.stim_exe_history[stimuli_to_exe]['variance_hist']) - 1
-        # Select the variance value if not already got
+        # Select the variance value if not already found
         return self.get_formated_stimulas(stimuli_to_exe,
                                           self.stim_exe_history[stimuli_to_exe]['variance_hist'][var_idx])
 
-    # Update the variance for current stimulas  based on the user response to be used when executed next time
+    # Update the variance for current stimulus based on the user response to be used when executed next time
     def update_difficulty_level_for_next_iteration(self):
         reversed_val = None
         cur_stim_id = self.stim_exe_history['cur_stimuli']['index']
 
-        # get variance based on difficulty level
+        # Get variance based on difficulty level
         if (self.stim_exe_history.get(cur_stim_id) and
             self.stim_exe_history[cur_stim_id].get('correct', 0) >= SCConstants.STEPUP):
             variance = self.get_variance(cur_stim_id, DifficultyLevel.HIGH)
@@ -123,31 +123,31 @@ class StairCase:
 
         status = self.update_reversal_params(cur_stim_id, reversed_val)
 
-        # update the next difficulty level
+        # Update the next difficulty level
         self.stim_exe_history[cur_stim_id]['variance_hist'].append(variance)
         return status
 
-    # GEt the next stimuli
+    # Get the next stimuli
     def prepare_next_stimuli(self):
         # Prepare next stimuli using current stimuli index
         stim_to_exe = self.get_next_stimuli_index(self.stim_exe_history['cur_stimuli']['index'])
         var_idx = len(self.stim_exe_history[stim_to_exe]['variance_hist']) - 1
         variance = self.stim_exe_history[stim_to_exe]['variance_hist'][var_idx]
 
-        # Update cur index and expected response
+        # Update current index and expected response
         self.stim_exe_history['cur_stimuli']['index'] = stim_to_exe
         self.stim_exe_history['cur_stimuli']['expected_result'] = \
             self.get_expected_result(variance, self.stim_conditions[stim_to_exe][StimuliParam.SLANT])
 
     # Get the next stimuli for execution
     def get_next_stimuli_index(self, cur_stimuli_id):
-        # get the index of last stimuli index value
+        # Get the index of last stimuli index value
         stim_indices_idx = self.stim_condition_indices.index(cur_stimuli_id)
 
         while True:
-            stim_indices_idx += 1  # get next stimuli
+            stim_indices_idx += 1  # Get next stimuli
 
-            # See if the end of the list is reached if yes rolover
+            # See if the end of the list is reached; if yes, roll over
             if stim_indices_idx > (len(self.stim_condition_indices) -1):
                 stim_indices_idx = 0
                 # Shuffle the list
@@ -159,7 +159,7 @@ class StairCase:
 
         return self.stim_condition_indices[stim_indices_idx]
 
-    # For the given variance get the expected result
+    # For the given variance, get the expected result
     def get_expected_result(self, variance, ref_slant):
 
         if ref_slant > (ref_slant + variance):
@@ -167,7 +167,7 @@ class StairCase:
         elif ref_slant < (ref_slant + variance) > 0:
             return int(MatlabCommandsControl.COMMAND_WORD_BUTTON4_CLICKED)
 
-    # Update the reversal params - how many times it changed, is the task complete
+    # Update the reversal params - how many times it changed, is the task complete, etc.
     def update_reversal_params(self, cur_index, reversed_val=None):
         no_of_reversed_count = 0
         if reversed_val is not None:
@@ -188,20 +188,20 @@ class StairCase:
                         no_of_reversed_count += 1
                     prev_rev_val = i
 
-        # Add the stimuls which has completed its task into this list and see if it needs to be removed from the current population
+        # Add the stimulus which has completed its task into this list and see if it needs to be removed from the current population
         if no_of_reversed_count >= SCConstants.NUMBER_OF_REVERSAL:
             self.stim_exe_history['completed_stim'].append(cur_index)
         elif len(self.stim_exe_history[cur_index]['variance_hist']) >= SCConstants.MAX_TRIALS:
             self.stim_exe_history['completed_stim'].append(cur_index)
 
-        # Check if all the task has been completed
+        # Check if all the tasks have been completed
         if len(self.stim_exe_history['completed_stim']) == len(self.stim_condition_indices):
             # Stop the experiment here
             return False
 
         return True
 
-    # Update the results based on reponse
+    # Update the results based on response
     def compare_update_result(self, result_value):
         cur_index = self.stim_exe_history['cur_stimuli']['index']
 
@@ -220,17 +220,16 @@ class StairCase:
 
         status = self.update_difficulty_level_for_next_iteration()
 
-        # If all task are executed then the status returned is False
+        # If all task are executed, then the status returned is False
         if not status:
             print "All simuli executed"
 
-            # *** Change this accordingly after talking to Hoon ***
             return False
 
         self.prepare_next_stimuli()
         return True
 
-    # get the variance for a given stimuli
+    # Get the variance for a given stimuli
     def get_variance(self, stimuli_index, difficulty_level=0):
         ref_slant = self.stim_conditions[stimuli_index][0]
 
@@ -238,7 +237,7 @@ class StairCase:
         variance_index = max_len
         variance_value = self.variance_lst[ref_slant][max_len]
 
-        # get existing variance value
+        # Get existing variance value
         if self.stim_exe_history.get(stimuli_index):
             cur_var_idx = len(self.stim_exe_history[stimuli_index]['variance_hist']) - 1
             if self.stim_exe_history.get(stimuli_index).get('variance_hist')[cur_var_idx]:
@@ -255,13 +254,13 @@ class StairCase:
                 variance_index = variance_index -1
 
         elif difficulty_level == DifficultyLevel.LOW:  # 2 Means decrease difficulty level
-            if variance_index != (max_len):  # If @ N-1th index remain there
+            if variance_index != (max_len):  # If @ N-1th index remains there
                 variance_index = variance_index + 1
 
         # Return the variance
         return (self.variance_lst[ref_slant][variance_index] * self.stim_conditions[stimuli_index][StimuliParam.START_POS])
 
-    # This is formating routine
+    # This is formatting routine
     def get_formated_stimulas(self, stimuli_index, variance,
                                  response_data_type=ResponseDataType.MATLAB_STRING):
 

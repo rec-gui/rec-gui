@@ -1,5 +1,5 @@
 '''
-Globally accessed parmeters
+Globally accessed parameters
 '''
 import os
 # import parallel
@@ -28,8 +28,8 @@ class GlobalParams:
 
         self.gui_display = {}
         self.arbitrator_display = {}
-        self.arbitrator_window_width = 0 #1280
-        self.arbitrator_window_height = 0 #720
+        self.arbitrator_window_width = 0 # 1280
+        self.arbitrator_window_height = 0 # 720
         self.drawing_object_on = 0
         self.drawing_object_number = 0
         self.drawing_object_pos = [[0,0],[0,0],[0,0],[0,0],[0,0]]
@@ -39,16 +39,16 @@ class GlobalParams:
         self.config_param = None
         self.config_file_name = const.DEFAULT_CONFIG_FILE
 
-        # read all the config parameters,
+        # Read all the config parameters,
         # Subject specific config
         resp, msg = self.read_config(self.subject_configuration_file)
         if not resp:
             log.error(msg.format(self.subject_configuration_file))
             print msg.format(self.subject_configuration_file)
             exit(1)
-        self.update_subject_spcific_configuration(resp, self.subject_configuration_file)
+        self.update_subject_specific_configuration(resp, self.subject_configuration_file)
 
-        # application specific config
+        # Application specific config
         resp, msg = self.read_config(self.config_file_name)
         if not resp:
             log.error(msg.format(self.config_file_name))
@@ -59,23 +59,23 @@ class GlobalParams:
         # GUI root widget place holder
         self.gui_root = None
 
-        # Flag to check if programe has been stopped
+        # Flag to check if program has been stopped
         self.is_program_running = True
 
-        # place holder for arbitrator sockets
+        # Place holder for arbitrator sockets
         self.arbitrator_sock = None
         self.arbitrator_sock_addr = None
 
-        # Raw Eye Data and task data is append when the task is run.
-        # It is upto user when he attempts to write to the file and not let
-        # this lise overgrow
-        # Note: As soon as this data is written to file this would be reset to empty list []
+        # Raw Eye Data and task data is appended when the task is running.
+        # It is up to the user when he/she attempts to write to the file and not let
+        # this list overgrow
+        # Note: As soon as this data is written to the file, this would be reset to empty list []
         self.raw_eye_task_data = []
         self.last_raw_eye_data = [0, 0, 0, 0]
 
         # Eye data to which offset and gain is applied and is used for
-        # display. This is stored in mm and co-ordinate (0,0) at centre
-        # Where as eye link send this in reference to co-ordinate (0, 0)
+        # display. This is stored in mm and coordinate (0,0) at center
+        # Where as eyelink sends this in reference to coordinate (0,0)
         # at top left
         self.eye_data = [[0, 0], [0, 0]]             # Left [x, y] Right [x, y]
 
@@ -84,40 +84,33 @@ class GlobalParams:
             [[0] * 2] * self.constant['moving_eye_position_mean'],
             [[0] * 2] * self.constant['moving_eye_position_mean']]
 
-        # place holder for eye interpreter
+        # Place holder for eye interpreter
         self.eye_recording_method = self.analaog_input_output['eye_recording_method']
         self.eye_recording_method_name = self.analaog_input_output['eye_recording_method_name']
         self.eye_recording_method_obj = None
 
-        # Since we log the messages from different thread, Sharing a common
-        # list where the logs would be dumped and tkinter would run a
-        # timer every s(can be changed) where it reads the events and dumps it
-        # This is added to keep thread safe and running into infinite loops
-        # Log would be appended to the list and as and when they are dumped they wouldbe
-        # Log would be appended to the list and as and when they are dumped they wouldbe
-        # removed
         self.dump_log = None
 
         # Vergence to plot on the display
         self.vergence_error_to_plot = [0, 0, 0]  # x, y
-        # If this flag is set then display the vergence
+        # If this flag is set, then display the vergence
         self.display_vergence = False
 
-        # Eye in and out for Left and right
+        # Eye in and out for Left and Right
         self.eye_in_or_out = [1, 1]
         self.last_sent_eye_in_out = [0, 0]
         self.last_vergence_error_sent = 0
 
-        # list of centre points with value [x, y, z, diameter] which is sent
-        # from GUI to Matlab
+        # List of center points with value [x, y, z, diameter] which is sent
+        # from GUI to MATLAB
         self.centre_of_windows = []
         self.depth = 0
-        # This is required to redraw the window else everytime the window would be drawn
-        # unncessarily
+        # This is required to redraw the window, else every time the window would be drawn
+        # unnecessarily.
         self.centre_window_on = False
 
-        # If there is any configuration that needs to be shared with arbitrator server
-        # store in this dict or if in case sent directly then it not need be stored
+        # If there is any configuration that needs to be shared with 'arbitrator server,'
+        # store in this dictionary. If it is sent directly, then it does not need to be stored.
         self.configuration_to_share = {}
 
         # State to check if 3rd party application is up and exchange the basic configuration
@@ -145,7 +138,7 @@ class GlobalParams:
         file_name_with_path = os.path.join(directory_path, filename)
 
         if not os.path.isfile(file_name_with_path):
-            return None, 'Please check if file {} exist!!!'
+            return None, 'Please check if file {} exists!!!'
 
         file = File()
         subject_configuration =  file.read(file_name_with_path)
@@ -154,9 +147,9 @@ class GlobalParams:
 
         return subject_configuration, "success"
 
-    def update_subject_spcific_configuration(self, config, filename):
+    def update_subject_specific_configuration(self, config, filename):
         '''
-        subject specific configuation like offset, gain, pupil size screen constant
+        subject specific configuation like offset, gain, pupil size, screen constant
         :param config:
         :param filename:
         :return:
@@ -164,7 +157,7 @@ class GlobalParams:
         self.subject_configuration = config
         self.subject_configuration_file = filename
 
-        # global parameters for easy access
+        # Global parameters for easy access
         # Screen parameters constant like
         self.arbitrator_display = self.subject_configuration['arbitrator_display_screen']
 
@@ -209,7 +202,7 @@ class GlobalParams:
         if subject_filename != const.SUBJECT_DEFAULT_CONFIG_FILE:
             self.subject_configuration_file = subject_filename
         self.update_subject_name(subjectname)
-        # if the directory does not exist create one
+        # If the directory does not exist, create one
         if not os.path.exists(self.subject_configuration_file):
             os.makedirs(self.subject_configuration_file)
 
@@ -296,7 +289,7 @@ class GlobalParams:
 
     def update_vergence_error_to_plot(self, vergence_error_x, vergence_error_y, vergence_window):
         '''
-        Veergence error to display on the UI
+        Vergence error to display on the UI
         :param vergence_error_x:
         :param vergence_error_y:
         :return:
@@ -305,7 +298,7 @@ class GlobalParams:
         self.vergence_error_to_plot[const.Y] = vergence_error_y
         self.vergence_error_to_plot[2] = vergence_window
 
-    def udpdate_vergence_display(self, value):
+    def update_vergence_display(self, value):
         self.display_vergence = value
 
     def update_last_sent_vergence_error(self, value):
@@ -406,7 +399,7 @@ class GlobalParams:
             self.arbitrator_window_width /self.eye_canvas_width
 
 
-        # scale factor height = 3rd part server height / (canvas relative height * canvas frame relative height * gui height)
+        # scale factor height = 3rd party server height / (canvas relative height * canvas frame relative height * gui height)
         self.arbitrator_display['y_scale_factor'] = \
             self.arbitrator_window_height /self.eye_canvas_height
 
