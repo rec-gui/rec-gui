@@ -8,3 +8,7 @@ Tutorials for learning how to use the software are provided in the Documentation
 Lab Website: https://rosenberg.neuro.wisc.edu/
 
 REC-GUI Website: https://recgui2018.wixsite.com/rec-gui
+
+## Updates:
+20 May 2020: REC-GUI graphical user interface code now supports both Python2 and Python3. The
+	main difference involves how data is sent/recieved between the GUI and MATLAB computers.

@@ -1,0 +1,32 @@
+{
+    "eye_offset_gain": {
+        "left_offset_y": 2573.0, 
+        "left_offset_x": -1854.0, 
+        "right_offset_y": 2639.0, 
+        "right_offset_x": -4183.0, 
+        "left_gain_y": -5.1300370419, 
+        "left_gain_x": -4.33138145073, 
+        "right_gain_y": -5.39885516855, 
+        "right_gain_x": -4.40289089031
+    }, 
+    "selected_eye": {
+        "right": 1, 
+        "left": 1
+    }, 
+    "pupil_size": {
+        "right": 1, 
+        "left": 1
+    }, 
+    "arbitrator_display_screen": {
+        "x_scale_factor": 1.8018018018018018, 
+        "xscale_mm": 1.6, 
+        "screen_distance_mm": 570.0, 
+        "screen_width_mm": 800.0, 
+        "window_height_pixel": 720, 
+        "yscale_mm": 1.6, 
+        "y_scale_factor": 1.799370220422852, 
+        "iod_mm": 28, 
+        "window_width_pixel": 1280, 
+        "screen_height_mm": 450.0
+    }
+}
