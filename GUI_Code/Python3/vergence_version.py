@@ -104,7 +104,7 @@ class ValidateVergenceVersion():
         right_eye_x = globls.eye_data[const.RIGHT][0]
         right_eye_y = globls.eye_data[const.RIGHT][1]
 
-        x =  target_pt_data[0]
+        x = target_pt_data[0]
         y = target_pt_data[1]
         z = target_pt_data[2]
         vergence = target_pt_data[3]

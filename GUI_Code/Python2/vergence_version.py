@@ -80,7 +80,7 @@ class ValidateVergenceVersion():
         right_eye_x = globls.eye_data[const.RIGHT][0]
         right_eye_y = globls.eye_data[const.RIGHT][1]
 
-        x =  target_pt_data[0]
+        x = target_pt_data[0]
         y = target_pt_data[1]
         z = target_pt_data[2]
         vergence = target_pt_data[3]
@@ -103,16 +103,13 @@ class ValidateVergenceVersion():
         # ahead will give you the same coordinate for left & right eyes.
         # Calculate in degrees
         #
-        perfect_theta_lx = math.degrees(math.atan2(screendist + z,
-                                                   left_tp_x + (iod / 2))) - 90
-        perfect_theta_rx = 90 - math.degrees(math.atan2(screendist + z,
-                                                        right_tp_x - (iod / 2)))
+        perfect_theta_lx = math.degrees(math.atan2(-(left_tp_x + (iod / 2)), screendist))
+        perfect_theta_rx = math.degrees(math.atan2((right_tp_x - (iod / 2)), screendist))
         perfect_delta_x = perfect_theta_lx + perfect_theta_rx
 
         # Calculate the actual values of x using eye data in degrees
-        actual_theta_lx = math.degrees(math.atan2(screendist, left_eye_x + (iod / 2))) - 90
-        actual_theta_rx = 90 - math.degrees(math.atan2(screendist,
-                                                       right_eye_x - (iod / 2)))
+        actual_theta_lx = math.degrees(math.atan2(-(left_eye_x + (iod / 2)), screendist))
+        actual_theta_rx = math.degrees(math.atan2((right_eye_x - (iod / 2)), screendist))
 
         # Calculate the actual values of y using eye data in degrees
         actual_theta_ly = 90 - math.degrees(math.atan2(screendist, left_eye_y))
