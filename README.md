@@ -10,11 +10,11 @@ Lab Website: https://rosenberg.neuro.wisc.edu/
 REC-GUI Website: https://recgui2018.wixsite.com/rec-gui
 
 ## Citing REC-GUI
-If using REC-GUI, please use the following citation and RRID:
+If using REC-GUI, please use the following citation and Research Resource Identifier (RRID):
 
 Kim B, Kenchappa SC, Sunkara A, Chang TY, Thompson L, Doudlah R, and Rosenberg A (2019) Real-time experimental control using network-based parallel processing. eLife, 8: e40231.
 
-RRID:SCR_019008
+RRID:[SCR_019008](https://scicrunch.org/resources/Any/record/nlx_144509-1/SCR_019008/resolver?q=SCR_019008&l=SCR_019008)
 
 ## Updates:
 20 May 2020: REC-GUI now supports both Python2 and Python3. The main difference involves how data is sent/received between the GUI and MATLAB computers.
