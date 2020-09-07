@@ -11,6 +11,7 @@ REC-GUI Website: https://recgui2018.wixsite.com/rec-gui
 
 ## Citing REC-GUI
 If using REC-GUI, please use the following citation and RRID:
+
 Kim B, Kenchappa SC, Sunkara A, Chang TY, Thompson L, Doudlah R, and Rosenberg A (2019) Real-time experimental control using network-based parallel processing. eLife, 8: e40231.
 
 RRID - RRID:SCR_019008
